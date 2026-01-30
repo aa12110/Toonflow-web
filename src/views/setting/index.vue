@@ -213,13 +213,35 @@
                 <i-right theme="outline" size="16" fill="#9ca3af" />
               </div>
 
+              <div class="linkItem" @click="openGitee">
+                <div class="linkIcon">
+                  <i-code theme="outline" size="20" fill="currentColor" />
+                </div>
+                <div class="linkContent">
+                  <span class="linkTitle">Gitee 仓库</span>
+                  <span class="linkDesc">国内镜像，查看源代码或贡献代码</span>
+                </div>
+                <i-right theme="outline" size="16" fill="#9ca3af" />
+              </div>
+
               <div class="linkItem" @click="checkUpdate">
                 <div class="linkIcon">
                   <i-refresh theme="outline" size="20" fill="currentColor" />
                 </div>
                 <div class="linkContent">
-                  <span class="linkTitle">检查更新</span>
+                  <span class="linkTitle">检查更新 (GitHub)</span>
                   <span class="linkDesc">前往 GitHub Releases 查看最新版本</span>
+                </div>
+                <i-right theme="outline" size="16" fill="#9ca3af" />
+              </div>
+
+              <div class="linkItem" @click="checkUpdateGitee">
+                <div class="linkIcon">
+                  <i-refresh theme="outline" size="20" fill="currentColor" />
+                </div>
+                <div class="linkContent">
+                  <span class="linkTitle">检查更新 (Gitee)</span>
+                  <span class="linkDesc">前往 Gitee Releases 查看最新版本</span>
                 </div>
                 <i-right theme="outline" size="16" fill="#9ca3af" />
               </div>
@@ -435,6 +457,7 @@ const settingData = ref<SettingType>({
 const router = useRouter();
 
 const GITHUB_URL = "https://github.com/HBAI-Ltd/Toonflow-app";
+const GITEE_URL = "https://gitee.com/HBAI-Ltd/Toonflow-app";
 
 function goBack() {
   router.push("/project");
@@ -444,8 +467,16 @@ function openGitHub() {
   window.open(GITHUB_URL, "_blank");
 }
 
+function openGitee() {
+  window.open(GITEE_URL, "_blank");
+}
+
 function checkUpdate() {
   window.open(`${GITHUB_URL}/releases`, "_blank");
+}
+
+function checkUpdateGitee() {
+  window.open(`${GITEE_URL}/releases`, "_blank");
 }
 
 function openLicense() {
