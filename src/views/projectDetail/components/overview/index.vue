@@ -66,17 +66,11 @@
             <label class="infoLabel">影片比例</label>
             <div class="infoRow">
               <span class="infoValue" v-if="!globalSettingEdit">{{ project?.videoRatio || "16:9" }}</span>
-              <a-input
-                style="
-                  padding-left: 16px !important;
-                  padding-right: 16px !important;
-                  padding-bottom: 12px !important;
-                  padding-top: 12px !important;
-                  background-color: #f9fafb !important;
-                  font-size: 1rem !important;
-                "
+              <a-select
+                style="width: 100%"
                 v-else
                 v-model:value="projectEditData.videoRatio"
+                :options="videoRatioOptions"
                 class="infoValue" />
             </div>
           </div>
@@ -155,6 +149,10 @@ const projectEditData = ref<{ videoRatio: string; artStyle: string; type: string
   artStyle: project.value?.artStyle ?? "动漫",
   type: project.value?.type ?? "",
 });
+const videoRatioOptions = [
+  { label: "16:9", value: "16:9" },
+  { label: "9:16", value: "9:16" },
+];
 onMounted(() => {
   getStats();
 });
@@ -224,7 +222,7 @@ function updateProjectIntro() {
 function updateProject() {
   axios
     .post("/project/updateProject", {
-      id: projectId,
+      id: projectId.value,
       type: projectEditData.value.type,
       artStyle: projectEditData.value.artStyle,
       videoRatio: projectEditData.value.videoRatio,

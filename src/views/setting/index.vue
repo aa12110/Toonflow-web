@@ -81,26 +81,75 @@
         </div>
       </section>
 
-      <!-- 模型配置卡片 -->
-      <section class="settingCard" v-for="key in Object.keys(modelRecordName) as ModelKey[]" :key="key">
+      <!-- 语言模型配置卡片 -->
+      <LanguageModelConfig v-model="settingData.languageModel" @change="handleChange('languageModel')" />
+
+      <!-- 图像模型配置卡片 -->
+      <section class="settingCard">
         <div class="cardHeader">
           <div class="cardHeaderLeft">
-            <div class="cardIcon" :class="getModelIconClass(key)">
-              <i-brain v-if="key === 'languageModel'" theme="outline" size="20" fill="currentColor" />
-              <i-pic v-else-if="key === 'imageModel'" theme="outline" size="20" fill="currentColor" />
-              <i-video v-else theme="outline" size="20" fill="currentColor" />
+            <div class="cardIcon green">
+              <i-pic theme="outline" size="20" fill="currentColor" />
             </div>
-            <span class="cardTitle">{{ modelRecordName[key] }}配置</span>
+            <span class="cardTitle">图像生成模型配置</span>
           </div>
-          <a-button v-if="key === 'videoModel'" type="primary" class="addBtn" @click="handleAddModal">
+        </div>
+
+        <div class="cardContent">
+          <div class="modelForm">
+            <div class="formItem" v-if="!['apimart', 'runninghub'].includes(settingData.imageModel.manufacturer)">
+              <label class="formLabel">模型名称</label>
+              <a-input v-model:value="settingData.imageModel.model" placeholder="请输入图像生成模型名称" class="formInput" />
+            </div>
+            <div class="formItem">
+              <label class="formLabel">厂商</label>
+              <a-select
+                v-model:value="settingData.imageModel.manufacturer"
+                placeholder="请选择厂商"
+                class="formSelect"
+                @change="handleChange('imageModel')">
+                <a-select-option v-for="item in imageModelManufacturer" :key="item.value" :value="item.value">
+                  {{ item.label }}
+                </a-select-option>
+              </a-select>
+            </div>
+            <div class="formItem" v-if="settingData.imageModel.manufacturer === 'openAi'">
+              <label class="formLabel">BaseURL</label>
+              <a-input v-model:value="settingData.imageModel.baseURL" placeholder="请输入图像生成模型的BaseURL" class="formInput" />
+            </div>
+            <div class="formItem">
+              <label class="formLabel">API Key</label>
+              <a-input-password v-model:value="settingData.imageModel.apiKey" placeholder="请输入图像生成模型的API Key" class="formInput" />
+            </div>
+            <!-- 图像模型测试按钮 -->
+            <div class="formItem">
+              <a-button type="primary" :loading="testingImage" @click="testImageModel" class="testBtn">
+                <i-check-one v-if="!testingImage" theme="outline" size="14" fill="currentColor" />
+                {{ testingImage ? "正在生成测试图片..." : "检查图像生成是否可用" }}
+              </a-button>
+              <span class="formHint">提示：测试将生成一张“2D猫”图片，可能需要 30秒~2分钟，请耐心等待</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 视频模型配置卡片 -->
+      <section class="settingCard">
+        <div class="cardHeader">
+          <div class="cardHeaderLeft">
+            <div class="cardIcon orange">
+              <i-video theme="outline" size="20" fill="currentColor" />
+            </div>
+            <span class="cardTitle">视频生成模型配置</span>
+          </div>
+          <a-button type="primary" class="addBtn" @click="handleAddModal">
             <i-plus theme="outline" size="14" fill="currentColor" />
             新增配置
           </a-button>
         </div>
 
         <div class="cardContent">
-          <!-- 视频模型列表 -->
-          <div v-if="key === 'videoModel'" class="modelList">
+          <div class="modelList">
             <div v-if="videoModalList.length === 0" class="emptyState">
               <i-inbox theme="outline" size="48" fill="#d1d5db" />
               <p>暂无配置，点击上方按钮添加</p>
@@ -111,52 +160,6 @@
               :config="item"
               @edit="handleModalEdit"
               @delete="handleModalDelete" />
-          </div>
-
-          <!-- 其他模型配置表单 -->
-          <div v-else class="modelForm">
-            <div class="formItem" v-if="key !== 'imageModel' || !['apimart', 'runninghub'].includes(settingData[key].manufacturer)">
-              <label class="formLabel">模型名称</label>
-              <a-input v-model:value="settingData[key].model" :placeholder="`请输入${modelRecordName[key]}名称`" class="formInput" />
-            </div>
-            <div class="formItem">
-              <label class="formLabel">厂商</label>
-              <a-select v-model:value="settingData[key].manufacturer" placeholder="请选择厂商" class="formSelect" @change="handleChange(key)">
-                <a-select-option v-for="item in getManufacturerList(key)" :key="item.value" :value="item.value">
-                  {{ item.label }}
-                </a-select-option>
-              </a-select>
-            </div>
-            <div class="formItem" v-if="key !== 'imageModel' || settingData[key].manufacturer === 'openAi'">
-              <label class="formLabel">BaseURL</label>
-              <a-input
-                v-model:value="settingData[key].baseURL"
-                :placeholder="`请输入${modelRecordName[key]}的BaseURL`"
-                class="formInput"
-                :class="{ 'input-error': key === 'languageModel' && baseURLError }"
-                @input="key === 'languageModel' && validateBaseURL()" />
-              <span class="formError" v-if="key === 'languageModel' && baseURLError">{{ baseURLError }}</span>
-              <span class="formHint" v-else-if="key === 'languageModel'">提示：只需填写到 /v1/ 为止，例如 https://api.openai.com/v1/</span>
-            </div>
-            <div class="formItem">
-              <label class="formLabel">API Key</label>
-              <a-input-password v-model:value="settingData[key].apiKey" :placeholder="`请输入${modelRecordName[key]}的API Key`" class="formInput" />
-            </div>
-            <!-- 语言模型测试按钮 -->
-            <div class="formItem" v-if="key === 'languageModel'">
-              <a-button type="primary" :loading="testingAI" @click="testLanguageModel" class="testBtn">
-                <i-check-one v-if="!testingAI" theme="outline" size="14" fill="currentColor" />
-                检查AI是否可用
-              </a-button>
-            </div>
-            <!-- 图像模型测试按钮 -->
-            <div class="formItem" v-if="key === 'imageModel'">
-              <a-button type="primary" :loading="testingImage" @click="testImageModel" class="testBtn">
-                <i-check-one v-if="!testingImage" theme="outline" size="14" fill="currentColor" />
-                {{ testingImage ? '正在生成测试图片...' : '检查图像生成是否可用' }}
-              </a-button>
-              <span class="formHint">提示：测试将生成一张“2D猫”图片，可能需要 30秒~2分钟，请耐心等待</span>
-            </div>
           </div>
         </div>
       </section>
@@ -307,19 +310,10 @@
   </a-modal>
 
   <!-- 图像测试结果预览弹窗 -->
-  <a-modal 
-    title="图像生成测试成功" 
-    v-model:open="testImageModalVisible" 
-    :footer="null"
-    centered
-    width="auto"
-    class="test-image-modal">
+  <a-modal title="图像生成测试成功" v-model:open="testImageModalVisible" :footer="null" centered width="auto" class="test-image-modal">
     <div class="test-image-content">
       <p class="test-image-tip">✅ 图像模型配置正确，以下是生成的测试图片：</p>
-      <a-image 
-        :src="testImageResult" 
-        :preview="{ src: testImageResult }"
-        class="test-image-preview" />
+      <a-image :src="testImageResult" :preview="{ src: testImageResult }" class="test-image-preview" />
     </div>
   </a-modal>
 </template>
@@ -332,15 +326,14 @@ import axios from "@/utils/axios";
 import ConfigAddForm from "./components/configAddForm.vue";
 import ModalInfo from "./components/modalInfo.vue";
 import PromptEditor from "./components/promptEditor.vue";
+import LanguageModelConfig from "./components/languageModelConfig.vue";
 import dayjs from "dayjs";
 
 const videoModalList = ref<ConfigForm[]>([]);
 const sqlShow = ref(false);
 const sqlString = ref("");
 const promptEditorShow = ref(false);
-const testingAI = ref(false);
 const testingImage = ref(false);
-const baseURLError = ref("");
 const testImageResult = ref<string>(""); // 测试生成的图片 base64
 const testImageModalVisible = ref(false); // 图片预览弹窗
 
@@ -415,56 +408,6 @@ function handleChange(key: ModelKey) {
   // 可扩展的厂商切换逻辑
 }
 
-// 校验 BaseURL 格式
-function validateBaseURL() {
-  const url = settingData.value.languageModel.baseURL;
-  if (!url) {
-    baseURLError.value = "";
-    return true;
-  }
-
-  // 检查是否包含 /v1/ 后面还有其他路径
-  const v1Index = url.indexOf("/v1/");
-  if (v1Index !== -1) {
-    const afterV1 = url.substring(v1Index + 4); // 获取 /v1/ 后面的内容
-    if (afterV1 && afterV1 !== "/" && afterV1.replace(/\/+$/, "") !== "") {
-      baseURLError.value = "错误：BaseURL 只需填写到 /v1/ 为止，请勿添加后续路径";
-      return false;
-    }
-  }
-
-  baseURLError.value = "";
-  return true;
-}
-
-// 测试语言模型连接
-async function testLanguageModel() {
-  const { model, apiKey, baseURL } = settingData.value.languageModel;
-
-  if (!model) {
-    message.warning("请先填写模型名称");
-    return;
-  }
-  if (!apiKey) {
-    message.warning("请先填写 API Key");
-    return;
-  }
-
-  testingAI.value = true;
-  try {
-    await axios.post("/other/testAI", {
-      modelName: model,
-      apiKey: apiKey,
-      baseURL: baseURL || undefined,
-    });
-    message.success("连接成功！模型配置正确");
-  } catch (e: any) {
-    message.error(`连接失败: ${e.message}`);
-  } finally {
-    testingAI.value = false;
-  }
-}
-
 // 测试图像模型连接
 async function testImageModel() {
   const { model, apiKey, baseURL, manufacturer } = settingData.value.imageModel;
@@ -501,23 +444,6 @@ async function testImageModel() {
   }
 }
 
-function getModelIconClass(key: ModelKey): string {
-  const classMap = {
-    languageModel: "purple",
-    imageModel: "green",
-    videoModel: "orange",
-  };
-  return classMap[key] || "purple";
-}
-
-// 语言生成模型厂商列表
-const languageModelManufacturer = [
-  { label: "OpenAI请求格式", value: "openAi" },
-  // { label: "Gemini", value: "gemini" },
-  // { label: "DeepSeek", value: "deepseek" },
-  // { label: "火山引擎", value: "volcengine" },
-];
-
 // 图像生成模型厂商列表
 const imageModelManufacturer = [
   { label: "OpenAI", value: "openAi" },
@@ -526,14 +452,7 @@ const imageModelManufacturer = [
   { label: "RunningHub", value: "runninghub" },
 ];
 
-// 根据模型类型获取对应的厂商列表
-function getManufacturerList(key: ModelKey) {
-  if (key === "languageModel") return languageModelManufacturer;
-  if (key === "imageModel") return imageModelManufacturer;
-  return [];
-}
-
-type ModelKey = keyof typeof modelRecordName;
+type ModelKey = "languageModel" | "imageModel" | "videoModel";
 
 interface ModelDataType {
   model: string;
@@ -553,12 +472,6 @@ interface SettingType {
   name?: string;
   password?: string;
 }
-
-const modelRecordName = {
-  languageModel: "语言生成模型",
-  imageModel: "图像生成模型",
-  videoModel: "视频生成模型",
-} as const;
 
 onMounted(async () => {
   await getSetting();
