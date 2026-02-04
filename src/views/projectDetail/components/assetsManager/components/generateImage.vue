@@ -23,7 +23,7 @@
       <div class="modelBody" v-if="formData">
         <!-- 模式切换 -->
         <div class="modeSwitch">
-          <a-radio-group v-model:value="mode" button-style="solid" size="middle">
+          <a-radio-group v-model:value="mode" button-style="solid" size="small">
             <a-radio-button :value="1">
               <i-upload-one theme="outline" size="14" />
               <span>本地上传</span>
@@ -313,8 +313,8 @@ async function generatePrompt() {
     if (data.assetsId === formData.value.id) {
       formData.value.prompt = data.prompt;
     }
-  } catch {
-    message.error("提示词生成失败");
+  } catch (e: any) {
+    message.error(e.message ?? "提示词生成失败");
   } finally {
     promptLoading.value = false;
   }

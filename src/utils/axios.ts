@@ -22,12 +22,13 @@ instance.interceptors.response.use(
     return response.data;
   },
   function (error) {
+    console.log("%c Line:25 🍢 error", "background:#2eafb0", error);
     if (error.status === 401) {
       localStorage.removeItem("token");
       router.push("/login");
       message.error("登录已过期，请重新登录");
     }
-    return Promise.reject(error.response.data);
+    return Promise.reject(error?.response?.data ?? error);
   },
 );
 

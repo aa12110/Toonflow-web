@@ -66,12 +66,7 @@
             <label class="infoLabel">影片比例</label>
             <div class="infoRow">
               <span class="infoValue" v-if="!globalSettingEdit">{{ project?.videoRatio || "16:9" }}</span>
-              <a-select
-                style="width: 100%"
-                v-else
-                v-model:value="projectEditData.videoRatio"
-                :options="videoRatioOptions"
-                class="infoValue" />
+              <a-select style="width: 100%" v-else v-model:value="projectEditData.videoRatio" :options="videoRatioOptions" class="infoValue" />
             </div>
           </div>
           <div class="infoItem">
@@ -207,7 +202,7 @@ const stats = computed(() => [
 function updateProjectIntro() {
   axios
     .post("/project/updateProject", {
-      id: projectId,
+      id: projectId.value,
       intro: introEditData.value,
     })
     .then(async () => {
@@ -215,7 +210,7 @@ function updateProjectIntro() {
       message.success("项目简介更新成功");
       introEdit.value = false;
     })
-    .catch(() => {
+    .catch((e) => {
       message.error("项目简介更新失败");
     });
 }

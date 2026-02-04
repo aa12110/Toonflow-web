@@ -85,58 +85,7 @@
       <LanguageModelConfig v-model="settingData.languageModel" />
 
       <!-- 图像模型配置卡片 -->
-      <section class="settingCard">
-        <div class="cardHeader">
-          <div class="cardHeaderLeft">
-            <div class="cardIcon green">
-              <i-pic theme="outline" size="20" fill="currentColor" />
-            </div>
-            <span class="cardTitle">图像生成模型配置</span>
-          </div>
-        </div>
-
-        <div class="cardContent">
-          <div class="modelForm">
-            <div class="formItem" v-if="!['apimart', 'runninghub'].includes(settingData.imageModel.manufacturer)">
-              <label class="formLabel">模型名称</label>
-              <a-input v-model:value="settingData.imageModel.model" placeholder="请输入图像生成模型名称" class="formInput" />
-            </div>
-            <div class="formItem">
-              <label class="formLabel">厂商</label>
-              <a-select
-               
-                v-model:value="settingData.imageModel.manufacturer"
-               
-                placeholder="请选择厂商"
-               
-                class="formSelect"
-               
-                @change="(data) => handleChange(data as string, 'imageModel')">
-                <a-select-option v-for="item in imageModelManufacturer" :key="item.value" :value="item.value">
-                  {{ item.label }}
-                </a-select-option>
-              </a-select>
-            </div>
-            <div class="formItem" v-if="settingData.imageModel.manufacturer === 'openAi'">
-              <label class="formLabel">BaseURL</label>
-              <a-input v-model:value="settingData.imageModel.baseURL" placeholder="请输入图像生成模型的BaseURL" class="formInput" />
-              <span class="formHint">提示：只需填写到 /v1/ 为止，例如 https://api.openai.com/v1/</span>
-            </div>
-            <div class="formItem">
-              <label class="formLabel">API Key</label>
-              <a-input-password v-model:value="settingData.imageModel.apiKey" placeholder="请输入图像生成模型的API Key" class="formInput" />
-            </div>
-            <!-- 图像模型测试按钮 -->
-            <div class="formItem">
-              <a-button type="primary" :loading="testingImage" @click="testImageModel" class="testBtn">
-                <i-check-one v-if="!testingImage" theme="outline" size="14" fill="currentColor" />
-                {{ testingImage ? "正在生成测试图片..." : "检查图像生成是否可用" }}
-              </a-button>
-              <span class="formHint">提示：测试将生成一张“2D猫”图片，可能需要 30秒~2分钟，请耐心等待</span>
-            </div>
-          </div>
-        </div>
-      </section>
+      <ImageModelConfig v-model="settingData.imageModel" />
 
       <!-- 视频模型配置卡片 -->
       <section class="settingCard">
@@ -313,14 +262,6 @@
   <a-modal title="执行SQL" v-model:open="sqlShow" @ok="doExecSQL" centered>
     <a-textarea v-model:value="sqlString" placeholder="请输入SQL语句" :autosize="{ minRows: 2, maxRows: 12 }" />
   </a-modal>
-
-  <!-- 图像测试结果预览弹窗 -->
-  <a-modal title="图像生成测试成功" v-model:open="testImageModalVisible" :footer="null" centered width="auto" class="test-image-modal">
-    <div class="test-image-content">
-      <p class="test-image-tip">✅ 图像模型配置正确，以下是生成的测试图片：</p>
-      <a-image :src="testImageResult" :preview="{ src: testImageResult }" class="test-image-preview" />
-    </div>
-  </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -332,15 +273,13 @@ import ConfigAddForm from "./components/configAddForm.vue";
 import ModalInfo from "./components/modalInfo.vue";
 import PromptEditor from "./components/promptEditor.vue";
 import LanguageModelConfig from "./components/languageModelConfig.vue";
+import ImageModelConfig from "./components/imageModelConfig.vue";
 import dayjs from "dayjs";
 
 const videoModalList = ref<ConfigForm[]>([]);
 const sqlShow = ref(false);
 const sqlString = ref("");
 const promptEditorShow = ref(false);
-const testingImage = ref(false);
-const testImageResult = ref<string>(""); // 测试生成的图片 base64
-const testImageModalVisible = ref(false); // 图片预览弹窗
 
 async function doExecSQL() {
   try {
@@ -408,128 +347,6 @@ function handleModalDelete(data: ConfigForm) {
   videoModalList.value = videoModalList.value.filter((item) => item.id !== data.id);
   updateSetting();
 }
-
-function handleChange(data?: string, key?: ModelKey) {
-  if (key == "imageModel" && data) {
-    // 图像模型厂商切换逻辑
-    settingData.value.imageModel.model = "";
-  }
-  // 可扩展的厂商切换逻辑
-}
-
-// 测试图像模型连接
-async function testImageModel() {
-  const { model, apiKey, baseURL, manufacturer } = settingData.value.imageModel;
-
-  // APIMart 和 RunningHub 不需要模型名称
-  if (!["apimart", "runninghub"].includes(manufacturer) && !model) {
-    message.warning("请先填写模型名称");
-    return;
-  }
-  if (!apiKey) {
-    message.warning("请先填写 API Key");
-    return;
-  }
-
-  testingImage.value = true;
-  message.info("正在生成测试图片，请耐心等待...");
-  try {
-    const res = await axios.post("/other/testImage", {
-      modelName: model || undefined,
-      apiKey: apiKey,
-      baseURL: baseURL || undefined,
-      manufacturer: manufacturer,
-    });
-    message.success("连接成功！图像模型配置正确");
-    // 显示生成的图片
-    if (res.data) {
-      testImageResult.value = res.data;
-      testImageModalVisible.value = true;
-    }
-  } catch (e: any) {
-    message.error(`连接失败: ${e.message}`);
-  } finally {
-    testingImage.value = false;
-  }
-}
-
-// 各厂商的模型预设
-const modelPresetsByManufacturer = {
-  openAi: [
-    // OpenAI
-    { label: "gpt-4o", value: "gpt-4o" },
-    { label: "gpt-4o-mini", value: "gpt-4o-mini" },
-    { label: "gpt-4.1", value: "gpt-4.1" },
-    { label: "gpt-5.1", value: "gpt-5.1" },
-    { label: "gpt-5.2", value: "gpt-5.2" },
-  ],
-  anthropic: [
-    { label: "claude-opus-4-5", value: "claude-opus-4-5" },
-    { label: "claude-haiku-4-5", value: "claude-haiku-4-5" },
-    { label: "claude-sonnet-4-5", value: "claude-sonnet-4-5" },
-    { label: "claude-opus-4-1", value: "claude-opus-4-1" },
-    { label: "claude-opus-4-0", value: "claude-opus-4-0" },
-    { label: "claude-sonnet-4-0", value: "claude-sonnet-4-0" },
-    { label: "claude-3-7-sonnet-latest", value: "claude-3-7-sonnet-latest" },
-    { label: "claude-3-5-haiku-latest", value: "claude-3-5-haiku-latest" },
-  ],
-  google: [
-    { label: "gemini-2.5-pro", value: "gemini-2.5-pro" },
-    { label: "gemini-2.5-flash", value: "gemini-2.5-flash" },
-    { label: "gemini-2.0-flash", value: "gemini-2.0-flash" },
-    { label: "gemini-2.0-flash-lite", value: "gemini-2.0-flash-lite" },
-    { label: "gemini-1.5-pro", value: "gemini-1.5-pro" },
-    { label: "gemini-1.5-flash", value: "gemini-1.5-flash" },
-  ],
-  zhipu: [
-    // 智谱
-    { label: "glm-4.7", value: "glm-4.7" },
-    { label: "glm-4.7-flashx", value: "glm-4.7-flashx" },
-    { label: "glm-4.6", value: "glm-4.6" },
-    { label: "glm-4.5-air", value: "glm-4.5-air" },
-    { label: "glm-4.5-airx", value: "glm-4.5-airx" },
-    { label: "glm-4-long", value: "glm-4-long" },
-    { label: "glm-4-flashx-250414", value: "glm-4-flashx-250414" },
-    { label: "glm-4.7-flash", value: "glm-4.7-flash" },
-    { label: "glm-4.5-flash", value: "glm-4.5-flash" },
-    { label: "glm-4-flash-250414", value: "glm-4-flash-250414" },
-    { label: "glm-4.6v", value: "glm-4.6v" },
-  ],
-  qwen: [
-    // 千问
-    { label: "qwen-vl-max", value: "qwen-vl-max" },
-    { label: "qwen-plus-latest", value: "qwen-plus-latest" },
-    { label: "qwen-max", value: "qwen-max" },
-    { label: "qwen2.5-72b-instruct", value: "qwen2.5-72b-instruct" },
-    { label: "qwen2.5-14b-instruct-1m", value: "qwen2.5-14b-instruct-1m" },
-    { label: "qwen2.5-vl-72b-instruct", value: "qwen2.5-vl-72b-instruct" },
-  ],
-  deepseek: [
-    { label: "deepseek-chat", value: "deepseek-chat" },
-    { label: "deepseek-reasoner", value: "deepseek-reasoner" },
-  ],
-  volcengine: [
-    // 豆包
-    { label: "doubao-seed-1-6-flash", value: "doubao-seed-1-6-flash" },
-    { label: "doubao-seed-1-6-lite", value: "doubao-seed-1-6-lite-251015" },
-    { label: "doubao-seed-1-6", value: "doubao-seed-1-6" },
-    { label: "doubao-seed-1-8", value: "doubao-seed-1-8" },
-  ],
-};
-
-// 语言模型预设选项 - 根据当前选择的厂商动态返回
-const languageModelPresets = computed(() => {
-  const manufacturer = settingData.value.languageModel.manufacturer || "openAi";
-  return modelPresetsByManufacturer[manufacturer as keyof typeof modelPresetsByManufacturer] || modelPresetsByManufacturer.openAi;
-});
-
-// 图像生成模型厂商列表ssssssssssssssssssssssssssssssssss
-const imageModelManufacturer = [
-  { label: "OpenAI请求格式", value: "openAi" },
-  { label: "火山引擎", value: "volcengine" },
-  { label: "APIMart", value: "apimart" },
-  { label: "RunningHub", value: "runninghub" },
-];
 
 type ModelKey = "languageModel" | "imageModel" | "videoModel";
 
@@ -1269,28 +1086,5 @@ async function clearDatabase() {
   color: var(--mainColor);
   width: fit-content;
   border: 1px solid rgba(153, 19, 250, 0.2);
-}
-
-/* 图像测试结果弹窗 */
-.test-image-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 8px;
-}
-
-.test-image-tip {
-  color: #22c55e;
-  font-size: 14px;
-  font-weight: 500;
-  margin: 0;
-}
-
-.test-image-preview {
-  max-width: 512px;
-  max-height: 512px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 </style>

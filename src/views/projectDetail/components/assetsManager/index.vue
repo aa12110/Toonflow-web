@@ -417,8 +417,8 @@ async function handleBatchGeneratePrompt() {
       });
       const idx = selectModal.value!.findIndex((i) => i.id === res.data.assetsId);
       if (idx !== -1) selectModal.value![idx].prompt = res.data.prompt;
-    } catch {
-      message.error("提示词生成失败");
+    } catch (e: any) {
+      message.error(e.message ?? "提示词生成失败");
     }
   });
   batchPromptLoading.value = false;

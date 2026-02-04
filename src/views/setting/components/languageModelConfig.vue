@@ -22,6 +22,7 @@
         <div class="formItem">
           <label class="formLabel">模型名称</label>
           <a-auto-complete
+            :key="modelData.manufacturer"
             v-model:value="modelData.model"
             :options="currentModelPresets"
             placeholder="请输入或选择语言生成模型名称"
@@ -66,19 +67,21 @@ interface ModelDataType {
   manufacturer: string;
 }
 
-const props = defineProps<{
-  modelValue: ModelDataType;
-}>();
-
 const emit = defineEmits<{
   (e: "update:modelValue", value: ModelDataType): void;
   (e: "change"): void;
 }>();
 
-const modelData = ref<ModelDataType>({ ...props.modelValue });
+const modelData = defineModel<ModelDataType>({
+  default: {
+    model: "",
+    apiKey: "",
+    baseURL: "",
+    manufacturer: "",
+  },
+});
 const testingAI = ref(false);
 const baseURLError = ref("");
-const isUpdatingFromParent = ref(false); // 标志位，防止循环更新
 
 // 语言生成模型厂商列表
 const manufacturerList = [
@@ -162,32 +165,6 @@ const currentModelPresets = computed(() => {
 function filterOption(input: string, option: any) {
   return option.value.toLowerCase().includes(input.toLowerCase());
 }
-
-// 监听 props 变化
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    isUpdatingFromParent.value = true;
-    modelData.value = { ...newVal };
-    // 使用 nextTick 确保更新完成后再重置标志
-    setTimeout(() => {
-      isUpdatingFromParent.value = false;
-    }, 0);
-  },
-  { deep: true },
-);
-
-// 监听本地数据变化，同步到父组件
-watch(
-  modelData,
-  (newVal) => {
-    // 只有不是从父组件更新时才向父组件发送更新
-    if (!isUpdatingFromParent.value) {
-      emit("update:modelValue", { ...newVal });
-    }
-  },
-  { deep: true },
-);
 
 function handleManufacturerChange() {
   // 根据选择的厂商自动填充 baseUrl

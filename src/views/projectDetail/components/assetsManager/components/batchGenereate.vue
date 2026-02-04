@@ -276,8 +276,8 @@ async function generatePrompt(data: GenerateItem) {
     if (index !== -1 && !promptGenerateCancel.value) {
       localData.value![index].prompt = res.data.prompt;
     }
-  } catch {
-    message.error(`"${data.name}" 提示词生成失败`);
+  } catch (e: any) {
+    message.error(`"${data.name}" ${e?.message ?? "提示词生成失败"}`);
   } finally {
     rowPromptLoading.value[data.id] = false;
   }
