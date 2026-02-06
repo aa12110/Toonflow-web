@@ -417,16 +417,15 @@ function handleCleanHistory() {
   height: 100%;
   display: flex;
   .conversation {
-    position: absolute;
-    margin-top: 15px;
-    height: calc(100% - 120px);
+    position: static;
+    height: calc(100%);
     width: 25vw;
   }
   .workspace {
-    height: calc(100% - 20px);
+    height: calc(100% + 44px);
     padding-left: 10px;
     width: 70%;
-    margin-left: 40%;
+    overflow: auto;
   }
 }
 .addOriginText {
