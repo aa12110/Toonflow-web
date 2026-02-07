@@ -5,7 +5,6 @@
       <div class="left-panel">
         <div class="config-section">
           <h3 class="section-title">配置信息</h3>
-
           <!-- 使用公共组件进行配置编辑 -->
           <VideoConfigForm
             v-if="editableConfig"
@@ -132,6 +131,8 @@ const editableConfig = ref<VideoConfigData | null>(null);
 // 当前配置
 const config = computed(() => {
   if (!props.configId) return null;
+  console.log("%c Line:136 🥟 props.configId", "background:#93c0a4", props.configId);
+
   return videoConfigs.value.find((c) => c.id === props.configId) || null;
 });
 
@@ -149,6 +150,8 @@ watch(
       editableConfig.value = {
         id: newConfig.id,
         manufacturer: newConfig.manufacturer,
+        model: newConfig.model,
+        aiConfigId: newConfig.aiConfigId,
         mode: newConfig.mode,
         startFrame: newConfig.startFrame,
         endFrame: newConfig.endFrame,

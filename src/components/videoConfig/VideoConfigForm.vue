@@ -2,23 +2,23 @@
   <div class="video-config-form">
     <!-- 厂商选择 -->
     <div class="form-row" v-if="editable">
-      <label>厂商</label>
-      <a-select v-model:value="localConfig.manufacturer" @change="onManufacturerChange" :disabled="manufacturerDisabled" size="small">
+      <label>模型</label>
+      <a-select v-model:value="localConfig.aiConfigId" @change="onManufacturerChange" :disabled="selectManfactDis" size="small">
         <a-select-option v-for="item in availableManufacturers" :key="item.value" :value="item.value">
           {{ item.label }}
         </a-select-option>
       </a-select>
     </div>
     <div class="form-row" v-else>
-      <label>厂商</label>
-      <span class="value">{{ getManufacturerLabel(localConfig.manufacturer) }}</span>
+      <label>模型</label>
+      <span class="value">{{ localConfig.model }}</span>
     </div>
 
     <!-- 模式选择 -->
     <div class="form-row" v-if="editable">
       <label>模式</label>
       <a-radio-group v-model:value="localConfig.mode" @change="onModeChange" size="small">
-        <a-radio v-for="mode in getModeOptions(localConfig.manufacturer)" :key="mode.value" :value="mode.value">
+        <a-radio v-for="mode in getModeOptions(localConfig.manufacturer, localConfig.model)" :key="mode.value" :value="mode.value">
           {{ mode.label }}
         </a-radio>
       </a-radio-group>
@@ -90,7 +90,7 @@
             </template>
           </draggable>
           <div
-            v-if="editable && (!localConfig.images || localConfig.images.length < getMaxImages(localConfig.manufacturer))"
+            v-if="editable && (!localConfig.images || localConfig.images.length < getMaxImages(localConfig.manufacturer, localConfig.model))"
             class="add-image-box"
             @click="openSelector('multi')">
             <plus-outlined />
@@ -99,7 +99,7 @@
       </div>
       <div class="form-row" v-if="editable">
         <label></label>
-        <span class="tip">拖拽调整顺序 | {{ localConfig.images?.length || 0 }}/{{ getMaxImages(localConfig.manufacturer) }}张</span>
+        <span class="tip">拖拽调整顺序 | {{ localConfig.images?.length || 0 }}/{{ getMaxImages(localConfig.manufacturer, localConfig.model) }}张</span>
       </div>
     </template>
 
@@ -124,23 +124,31 @@
       </div>
     </template>
 
+    <!-- 文本模式配置 -->
+    <template v-if="localConfig.mode === 'text'">
+      <div class="form-row">
+        <label>提示</label>
+        <span class="tip">纯文本生成视频，无需上传图片</span>
+      </div>
+    </template>
+
     <!-- 分辨率/比例 -->
     <div class="form-row">
-      <label>{{ getResolutionLabel(localConfig.manufacturer) }}</label>
+      <label>{{ getResolutionLabel(localConfig.manufacturer, localConfig.model) }}</label>
       <a-select v-if="editable" v-model:value="localConfig.resolution" size="small" style="flex: 1" @change="emitChange">
-        <a-select-option v-for="res in getResolutionOptions(localConfig.manufacturer)" :key="res.value" :value="res.value">
+        <a-select-option v-for="res in getResolutionOptions(localConfig.manufacturer, localConfig.model)" :key="res.value" :value="res.value">
           {{ res.label }}
         </a-select-option>
       </a-select>
-      <span v-else class="value">{{ getResolutionDisplayLabel(localConfig.manufacturer, localConfig.resolution) }}</span>
+      <span v-else class="value">{{ getResolutionDisplayLabel(localConfig.manufacturer, localConfig.model, localConfig.resolution) }}</span>
     </div>
 
     <!-- 时长 -->
     <div class="form-row">
       <label>时长</label>
-      <template v-if="getDurationOptions(localConfig.manufacturer).length > 0">
+      <template v-if="getDurationOptions(localConfig.manufacturer, localConfig.model).length > 0">
         <a-select v-if="editable" v-model:value="localConfig.duration" size="small" style="width: 100px" @change="emitChange">
-          <a-select-option v-for="dur in getDurationOptions(localConfig.manufacturer)" :key="dur.value" :value="dur.value">
+          <a-select-option v-for="dur in getDurationOptions(localConfig.manufacturer, localConfig.model)" :key="dur.value" :value="dur.value">
             {{ dur.label }}
           </a-select-option>
         </a-select>
@@ -150,14 +158,14 @@
         <template v-if="editable">
           <a-input-number
             v-model:value="localConfig.duration"
-            :min="getDurationRange(localConfig.manufacturer).min"
-            :max="getDurationRange(localConfig.manufacturer).max"
-            :step="getDurationRange(localConfig.manufacturer).step"
+            :min="getDurationRange(localConfig.manufacturer, localConfig.model).min"
+            :max="getDurationRange(localConfig.manufacturer, localConfig.model).max"
+            :step="getDurationRange(localConfig.manufacturer, localConfig.model).step"
             size="small"
             style="width: 70px"
             @change="emitChange" />
           <span class="unit">秒</span>
-          <span class="tip">{{ getDurationTip(localConfig.manufacturer) }}</span>
+          <span class="tip">{{ getDurationTip(localConfig.manufacturer, localConfig.model) }}</span>
         </template>
         <span v-else class="value">{{ localConfig.duration }}秒</span>
       </template>
@@ -180,7 +188,7 @@
       v-model:visible="selectorVisible"
       :script-id="scriptId"
       :mode="selectorMode"
-      :max-images="getMaxImages(localConfig.manufacturer)"
+      :max-images="getMaxImages(localConfig.manufacturer, localConfig.model)"
       :initial-images="selectorInitialImages"
       @confirm="onSelectorConfirm" />
   </div>
@@ -196,6 +204,7 @@ import axios from "@/utils/axios";
 import {
   type ImageItem,
   type VideoConfigData,
+  manufacturerConfigs,
   getManufacturerConfig,
   getManufacturerLabel,
   getModeLabel,
@@ -229,7 +238,7 @@ const props = withDefaults(
     ],
   },
 );
-
+const selectManfactDis = ref(props.manufacturerDisabled);
 const emit = defineEmits<{
   (e: "update:config", config: VideoConfigData): void;
   (e: "change", config: VideoConfigData): void;
@@ -253,8 +262,8 @@ watch(
 );
 
 // 获取分辨率显示标签
-function getResolutionDisplayLabel(manufacturer: string, value: string): string {
-  const options = getResolutionOptions(manufacturer);
+function getResolutionDisplayLabel(manufacturer: string, model: string, value: string): string {
+  const options = getResolutionOptions(manufacturer, model);
   const option = options.find((o) => o.value === value);
   return option?.label || value;
 }
@@ -272,10 +281,17 @@ const selectorInitialImages = computed(() => {
 
 // 厂商变更
 function onManufacturerChange() {
-  const newConfig = getManufacturerConfig(localConfig.manufacturer);
+  const selectedManufacturer = manufacturerList.value.find((i) => i.id == localConfig.aiConfigId);
+  console.log("%c Line:285 🥕 selectedManufacturer", "background:#42b983", selectedManufacturer);
+  if (!selectedManufacturer) return;
+  
+  localConfig.manufacturer = selectedManufacturer.manufacturer;
+  localConfig.model = selectedManufacturer.model;
+
+  const newConfig = getManufacturerConfig(localConfig.manufacturer, localConfig.model);
   localConfig.mode = newConfig.defaultMode as VideoConfigData["mode"];
   localConfig.resolution = newConfig.defaultResolution;
-  localConfig.duration = getDefaultDuration(localConfig.manufacturer);
+  localConfig.duration = getDefaultDuration(localConfig.manufacturer, localConfig.model);
   localConfig.startFrame = null;
   localConfig.endFrame = null;
   localConfig.images = [];
@@ -343,6 +359,7 @@ async function generatePrompt() {
     emitChange();
     message.success("提示词生成成功");
   } catch (e: any) {
+    console.log("%c Line:350 🍐 e", "background:#ffdd4d", e);
     message.error(e?.message || "生成失败");
   } finally {
     promptLoading.value = false;
@@ -355,6 +372,33 @@ function emitChange() {
   emit("update:config", configCopy);
   emit("change", configCopy);
 }
+const manufacturerAllRecord: Record<string, string> = Object.values(manufacturerConfigs).reduce((acc: Record<string, string>, c) => {
+  acc[c.value as string] = c.label;
+  return acc;
+}, {});
+const availableManufacturers = computed(() => {
+  if (manufacturerList.value.length === 0) return [];
+  return manufacturerList.value.map((i) => ({ label: i.model + manufacturerAllRecord[i.manufacturer], value: i.id, manufacturer: i.manufacturer }));
+});
+const manufacturerList = ref<{ model: string; manufacturer: string; id: number }[]>([]);
+onMounted(async () => {
+  const res = await axios.post("/video/getManufacturer", {
+    userId: Number(localStorage.getItem("userId")),
+  });
+  manufacturerList.value = res.data;
+  if (!localConfig.model) {
+    console.log("%c Line:295 🍇 manufacturerList.value", "background:#6ec1c2", manufacturerList.value);
+    localConfig.aiConfigId = undefined;
+    selectManfactDis.value = false;
+  } else {
+    // 如果已有 model，确保 manufacturer 和其他配置正确
+    const selectedManufacturer = manufacturerList.value.find((i) => i.model === localConfig.model);
+    if (selectedManufacturer) {
+      localConfig.aiConfigId = selectedManufacturer.id;
+      localConfig.manufacturer = selectedManufacturer.manufacturer;
+    }
+  }
+});
 </script>
 
 <style lang="scss" scoped>

@@ -29,8 +29,8 @@
             <div class="cardBody">
               <!-- 厂商选择 -->
               <div class="formRow">
-                <label>厂商</label>
-                <a-select v-model:value="config.manufacturer" @change="onManufacturerChange(config)" :disabled="allManufacturerDisable" size="small">
+                <label>模型</label>
+                <a-select v-model:value="config.configId" @change="onManufacturerChange(config)" :disabled="allManufacturerDisable" size="small">
                   <a-select-option v-for="item in availableManufacturers" :key="item.value" :value="item.value">
                     {{ item.label }}
                   </a-select-option>
@@ -40,7 +40,7 @@
               <div class="formRow">
                 <label>模式</label>
                 <a-radio-group v-model:value="config.mode" @change="onModeChange(config)" size="small">
-                  <a-radio v-for="mode in getModeOptions(config.manufacturer)" :key="mode.value" :value="mode.value">
+                  <a-radio v-for="mode in getModeOptions(config.manufacturer, config.model)" :key="mode.value" :value="mode.value">
                     {{ mode.label }}
                   </a-radio>
                 </a-radio-group>
@@ -107,14 +107,14 @@
                     <div
                       class="addImageBox"
                       @click="openImageSelector(config, 'multi')"
-                      v-if="!config.images || config.images.length < getMaxImages(config.manufacturer)">
+                      v-if="!config.images || config.images.length < getMaxImages(config.manufacturer, config.model)">
                       <plus-outlined />
                     </div>
                   </div>
                 </div>
                 <div class="formRow">
                   <label></label>
-                  <span class="tip">拖拽调整顺序 | {{ config.images?.length || 0 }}/{{ getMaxImages(config.manufacturer) }}张</span>
+                  <span class="tip">拖拽调整顺序 | {{ config.images?.length || 0 }}/{{ getMaxImages(config.manufacturer, config.model) }}张</span>
                 </div>
               </template>
               <!-- 单图模式配置 -->
@@ -139,9 +139,9 @@
               </template>
               <!-- 分辨率/比例 -->
               <div class="formRow">
-                <label>{{ getResolutionLabel(config.manufacturer) }}</label>
+                <label>{{ getResolutionLabel(config.manufacturer, config.model) }}</label>
                 <a-select v-model:value="config.resolution" size="small" style="width: 140px">
-                  <a-select-option v-for="res in getResolutionOptions(config.manufacturer)" :key="res.value" :value="res.value">
+                  <a-select-option v-for="res in getResolutionOptions(config.manufacturer, config.model)" :key="res.value" :value="res.value">
                     {{ res.label }}
                   </a-select-option>
                 </a-select>
@@ -149,9 +149,9 @@
               <!-- 时长 -->
               <div class="formRow">
                 <label>时长</label>
-                <template v-if="getDurationOptions(config.manufacturer).length > 0">
+                <template v-if="getDurationOptions(config.manufacturer, config.model).length > 0">
                   <a-select v-model:value="config.duration" size="small" style="width: 100px">
-                    <a-select-option v-for="dur in getDurationOptions(config.manufacturer)" :key="dur.value" :value="dur.value">
+                    <a-select-option v-for="dur in getDurationOptions(config.manufacturer, config.model)" :key="dur.value" :value="dur.value">
                       {{ dur.label }}
                     </a-select-option>
                   </a-select>
@@ -159,13 +159,13 @@
                 <template v-else>
                   <a-input-number
                     v-model:value="config.duration"
-                    :min="getDurationRange(config.manufacturer).min"
-                    :max="getDurationRange(config.manufacturer).max"
-                    :step="getDurationRange(config.manufacturer).step"
+                    :min="getDurationRange(config.manufacturer, config.model).min"
+                    :max="getDurationRange(config.manufacturer, config.model).max"
+                    :step="getDurationRange(config.manufacturer, config.model).step"
                     size="small"
                     style="width: 70px" />
                   <span class="unit">秒</span>
-                  <span class="tip">{{ getDurationTip(config.manufacturer) }}</span>
+                  <span class="tip">{{ getDurationTip(config.manufacturer, config.model) }}</span>
                 </template>
               </div>
               <!-- 视频提示词 -->
@@ -250,6 +250,8 @@ const videoStoreInstance = videoStore();
 interface VideoConfig {
   id: number;
   manufacturer: string;
+  model: string;
+  configId: number | undefined;
   mode: "startEnd" | "multi" | "single";
   startFrame: ImageItem | null;
   endFrame: ImageItem | null;
@@ -278,20 +280,21 @@ const imageSelectorMode = ref<"start" | "end" | "multi">("start");
 const currentEditConfig = ref<VideoConfig | null>(null);
 const tempSelectedImages = ref<ImageItem[]>([]);
 const tempSelectedIds = ref<number[]>([]);
-const manufacturerList = ref<{ model: string; manufacturer: string }[]>([]);
-const manufacturerAllList = Object.values(manufacturerConfigs).map((c) => ({
-  label: c.label,
-  value: c.value,
-}));
+const manufacturerList = ref<{ model: string; manufacturer: string; id: number }[]>([]);
+const manufacturerAllRecord: Record<string, string> = Object.values(manufacturerConfigs).reduce((acc: Record<string, string>, c) => {
+  acc[c.value as string] = c.label;
+  return acc;
+}, {});
 const availableManufacturers = computed(() => {
-  if (manufacturerList.value.length === 0) return manufacturerAllList;
-  return manufacturerAllList.filter((m) => manufacturerList.value.some((item) => item.manufacturer === m.value));
+  if (manufacturerList.value.length === 0) return [];
+  return manufacturerList.value.map((i) => ({ label: i.model + manufacturerAllRecord[i.manufacturer], value: i.id, manufacturer: i.manufacturer }));
 });
 onMounted(async () => {
   const res = await axios.post("/video/getManufacturer", {
     userId: Number(localStorage.getItem("userId")),
   });
   manufacturerList.value = res.data;
+  console.log("%c Line:295 🍇 manufacturerList.value", "background:#6ec1c2", manufacturerList.value);
   allManufacturerDisable.value = manufacturerList.value.length === 0;
 });
 watch(storyboardShow, (v) => {
@@ -301,16 +304,19 @@ watch(storyboardShow, (v) => {
 });
 
 function addVideoConfig() {
-  const defaultManufacturer = availableManufacturers.value[0]?.value || "volcengine";
+  const defaultManufacturer: string = availableManufacturers.value[0]?.manufacturer || "volcengine";
+  const defaultModel: string = availableManufacturers.value[0] ? manufacturerList.value.find(i => i.id === availableManufacturers.value[0].value)?.model || "" : "";
   const newConfig: VideoConfig = {
     id: ++configIdCounter,
-    manufacturer: defaultManufacturer,
-    mode: getDefaultMode(defaultManufacturer) as VideoConfig["mode"],
+    configId: undefined,
+    manufacturer: "",
+    model: "",
+    mode: getDefaultMode(defaultManufacturer, defaultModel) as VideoConfig["mode"],
     startFrame: null,
     endFrame: null,
     images: [],
-    resolution: getDefaultResolution(defaultManufacturer),
-    duration: getDefaultDuration(defaultManufacturer),
+    resolution: getDefaultResolution(defaultManufacturer, defaultModel),
+    duration: getDefaultDuration(defaultManufacturer, defaultModel),
     prompt: "",
     promptLoading: false,
   };
@@ -320,11 +326,14 @@ function removeVideoConfig(index: number) {
   videoConfigs.value.splice(index, 1);
 }
 function onManufacturerChange(config: VideoConfig) {
-  const manufacturerConfig = getManufacturerConfig(config.manufacturer);
+  const selectedItem = manufacturerList.value.find((i) => i.id == config.configId);
+  config.manufacturer = selectedItem?.manufacturer!;
+  config.model = selectedItem?.model || "";
+  const manufacturerConfig = getManufacturerConfig(config.manufacturer, config.model);
   // 重置模式
   config.mode = manufacturerConfig.defaultMode as VideoConfig["mode"];
   config.resolution = manufacturerConfig.defaultResolution;
-  config.duration = getDefaultDuration(config.manufacturer);
+  config.duration = getDefaultDuration(config.manufacturer, config.model);
   // 清空图片选择
   config.startFrame = null;
   config.endFrame = null;
@@ -366,7 +375,7 @@ function openImageSelector(config: VideoConfig, type: "start" | "end" | "multi")
 function handleBatchCheckAll(data: { checked: boolean; records: Storyboard[] }, type: string) {
   if (type !== "storyboard") return;
   const isSingleSelect = imageSelectorMode.value !== "multi";
-  const maxImages = getMaxImages(currentEditConfig.value?.manufacturer || "");
+  const maxImages = getMaxImages(currentEditConfig.value?.manufacturer || "", currentEditConfig.value?.model || "");
   if (data.checked) {
     if (isSingleSelect) {
       if (data.records.length > 0) {
@@ -394,7 +403,7 @@ function handleBatchCheckAll(data: { checked: boolean; records: Storyboard[] }, 
 }
 function handleCheckedChange(data: { checked: boolean; row: Storyboard }) {
   const isSingleSelect = imageSelectorMode.value !== "multi";
-  const maxImages = getMaxImages(currentEditConfig.value?.manufacturer || "");
+  const maxImages = getMaxImages(currentEditConfig.value?.manufacturer || "", currentEditConfig.value?.model || "");
   if (data.checked) {
     if (isSingleSelect) {
       tempSelectedIds.value = [data.row.id];
@@ -456,6 +465,7 @@ async function generateConfigPrompt(config: VideoConfig) {
     config.prompt = res.data;
     message.success("提示词生成成功");
   } catch (e: any) {
+    console.log("%c Line:463 🌽 e", "background:#e41a6a", e);
     message.error(e?.message || "生成失败");
   } finally {
     config.promptLoading = false;
@@ -494,7 +504,7 @@ async function handleOk() {
       const res = await axios.post("/video/addVideoConfig", {
         scriptId: props.scriptId,
         projectId: Number(project.value!.id!),
-        manufacturer: config.manufacturer,
+        configId: config.configId,
         mode: config.mode,
         startFrame: config.startFrame,
         endFrame: config.endFrame,

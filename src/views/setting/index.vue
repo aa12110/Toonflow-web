@@ -133,7 +133,7 @@
       </div>
     </div>
     <PromptEditor v-model="promptEditorShow" />
-    <newModelData v-model:modelDataShow="modelDataShow" v-model:configingModel="configingModel" @modelList="modelList"  />
+    <newModelData v-model:modelDataShow="modelDataShow" v-model:configingModel="configingModel" @modelList="modelList" />
   </div>
 </template>
 
@@ -142,18 +142,13 @@ import axios from "@/utils/axios";
 import { message, Modal } from "ant-design-vue";
 import PromptEditor from "./components/promptEditor.vue";
 import newModelData from "./components/modelData.vue";
-interface RowData {
-  id: number;
-  name: string;
-  type: string;
-  model: string;
-  baseUrl: string;
-  manufacturer: string;
-  createTime: number;
-  apiKey: string;
-}
 const promptEditorShow = ref(false);
-const modelData = ref<{ id: number; promptsId: number; code: string; model: string; name: string }[]>([]);
+interface ModelType {
+  id: number;
+  model: string;
+  name: string;
+}
+const modelData = ref<ModelType[]>([]);
 onMounted(() => {
   modelList();
 });
@@ -163,9 +158,9 @@ async function modelList() {
   modelData.value = res.data;
 }
 const modelDataShow = ref(false);
-const configingModel = ref<{ id: number; promptsId: number; code: string; model: string; name: string }>();
+const configingModel = ref<ModelType>();
 // 开始配置
-function startConfig(item: { id: number; promptsId: number; code: string; model: string; name: string }) {
+function startConfig(item: ModelType) {
   configingModel.value = item;
   modelDataShow.value = true;
 }

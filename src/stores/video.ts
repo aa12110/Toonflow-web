@@ -13,6 +13,8 @@ export interface VideoConfig {
   id: number;
   scriptId: number;
   projectId: number;
+  model: string;
+  aiConfigId: number | undefined;
   manufacturer: string;
   mode: "startEnd" | "multi" | "single";
   startFrame: ImageItem | null;
@@ -153,14 +155,15 @@ export default defineStore(
         const { data } = await axios.post("/video/getVideoConfigs", { scriptId });
         if (data && Array.isArray(data)) {
           // 过滤掉当前脚本的旧配置
-          videoConfigs.value = videoConfigs.value.filter((c) => c.scriptId !== scriptId);
-
+          videoConfigs.value = [];
           // 添加从后端获取的配置
           data.forEach((item: any) => {
             const config: VideoConfig = {
               id: item.id,
               scriptId: item.scriptId,
               projectId: item.projectId,
+              model: item.model,
+              aiConfigId: item.aiConfigId,
               manufacturer: item.manufacturer,
               mode: item.mode,
               startFrame: item.startFrame,
@@ -191,6 +194,8 @@ export default defineStore(
         id: configData.id,
         scriptId: configData.scriptId,
         projectId: configData.projectId,
+        model: configData.model,
+        aiConfigId: configData.aiConfigId,
         manufacturer: configData.manufacturer,
         mode: configData.mode,
         startFrame: configData.startFrame || null,
@@ -250,6 +255,7 @@ export default defineStore(
     // 生成视频（单个配置）
     async function generateVideo(configId: number): Promise<void> {
       const config = videoConfigs.value.find((c) => c.id === configId);
+
       if (!config) {
         throw new Error("配置不存在");
       }
@@ -269,8 +275,8 @@ export default defineStore(
       const { data } = await axios.post("/video/generateVideo", {
         projectId: config.projectId,
         scriptId: config.scriptId,
+        aiConfigId: config.aiConfigId,
         configId: configId, // 关联配置ID
-        type: config.manufacturer,
         resolution: config.resolution,
         filePath: videoImgs,
         duration: config.duration,

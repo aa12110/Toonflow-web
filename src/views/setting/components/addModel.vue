@@ -2,19 +2,18 @@
   <div class="addModelContainer">
     <a-modal v-model:open="modelShow" :title="props.state" :footer="null" width="520px">
       <a-form :model="modelForm">
-        <a-form-item label="名称">
-          <a-input v-model:value="modelForm.name" />
-        </a-form-item>
         <a-form-item label="厂商">
           <a-select placeholder="请选择厂商" v-model:value="modelForm.manufacturer" style="width: 100%">
             <a-select-option value="deepSeek">DeepSeek</a-select-option>
             <a-select-option value="volcengine">火山引擎</a-select-option>
             <a-select-option value="kling">可灵</a-select-option>
             <a-select-option value="zhipu">智谱</a-select-option>
-            <a-select-option value="qwen">通义千问</a-select-option>
+            <a-select-option value="qwen">阿里（千问）</a-select-option>
+            <a-select-option value="wan">阿里（万相）</a-select-option>
             <a-select-option value="openai">OpenAI</a-select-option>
             <a-select-option value="vidu">Vidu</a-select-option>
             <a-select-option value="runninghub">RunningHUB</a-select-option>
+            <a-select-option value="gemini">Gemini</a-select-option>
             <a-select-option value="other">其他</a-select-option>
           </a-select>
         </a-form-item>
@@ -26,7 +25,7 @@
             :allowClear="true"
             :options="typeOptions"
             :field-names="{ label: 'name', value: 'value', options: 'children' }"
-            v-model:value="modelForm.type" />
+            v-model:value="modelForm.modelType" />
         </a-form-item>
 
         <a-form-item label="模型">
@@ -41,7 +40,7 @@
             v-model:value="modelForm.model" />
           <a-input v-else v-model:value="modelForm.model" placeholder="请输入自定义模型标识" />
         </a-form-item>
-        <a-form-item label="Base URL">
+        <a-form-item label="Base URL" v-if="modelForm.manufacturer !== 'runninghub'">
           <a-input v-model:value="modelForm.baseUrl" />
         </a-form-item>
         <a-form-item label="API Key">
@@ -80,6 +79,7 @@ interface RowData {
   id: number;
   name: string;
   type: string;
+  modelType: string;
   model: string;
   baseUrl: string;
   manufacturer: string;
@@ -236,6 +236,10 @@ const imageModelPresets = {
     t2i: [{ label: "doubao-seedream-4-5-251128", value: "doubao-seedream-4-5-251128" }],
     i2i: [{ label: "doubao-seedream-4-5-251128", value: "doubao-seedream-4-5-251128" }],
   },
+  gemini: {
+    t2i: [{ label: "gemini-2.5-flash-image", value: "gemini-2.5-flash-image" }],
+    i2i: [{ label: "gemini-3-pro-image-preview", value: "gemini-3-pro-image-preview" }],
+  },
   kling: {
     t2i: [
       { label: "kling-v1", value: "kling-v1" },
@@ -295,7 +299,7 @@ const videoModelPresets = {
       { label: "doubao-seedance-1-5-pro-251215", value: "doubao-seedance-1-5-pro-251215" },
     ],
   },
-  sora: {
+  runninghub: {
     singleImage: [
       { label: "sora-2", value: "sora-2" },
       { label: "sora-2-pro", value: "sora-2-pro" },
@@ -305,30 +309,122 @@ const videoModelPresets = {
     startFrameOptional: [],
     multiImage: [],
     reference: [],
-    text: [],
+    text: [
+      { label: "sora-2", value: "sora-2" },
+      { label: "sora-2-pro", value: "sora-2-pro" },
+    ],
   },
   kling: {
-    singleImage: [
-      { label: "kling-v1-6(std)", value: "kling-v1-6" },
-      { label: "kling-v1-6(pro)", value: "kling-v1-6" },
+    singleImage: [],
+    startEndRequired: [
+      { label: "kling-v1(STD)", value: "kling-v1(STD)" },
+      { label: "kling-v1(PRO)", value: "kling-v1(PRO)" },
+      { label: "kling-v1-6(PRO)", value: "kling-v1-6(PRO)" },
+      { label: "kling-v1(PRO)", value: "kling-v1(PRO)" },
+      { label: "kling-v1(STD)", value: "kling-v1(STD)" },
     ],
-    startEndRequired: [],
     endFrameOptional: [],
     startFrameOptional: [],
     multiImage: [],
     reference: [],
-    text: [],
+    text: [
+      { label: "kling-v1(STD)", value: "kling-v1(STD)" },
+      { label: "kling-v1(PRO)", value: "kling-v1(PRO)" },
+      { label: "kling-v1-6(PRO)", value: "kling-v1-6(PRO)" },
+      { label: "kling-v1(PRO)", value: "kling-v1(PRO)" },
+      { label: "kling-v1(STD)", value: "kling-v1(STD)" },
+    ],
+  },
+  gemini: {
+    singleImage: [
+      { label: "veo-3.1-generate-preview", value: "veo-3.1-generate-preview" },
+      { label: "veo-3.1-fast-generate-preview", value: "veo-3.1-fast-generate-preview" },
+      { label: "veo-3.0-generate-preview", value: "veo-3.0-generate-preview" },
+      { label: "veo-3.0-fast-generate-preview", value: "veo-3.0-fast-generate-preview" },
+      { label: "veo-2.0-generate-001", value: "veo-2.0-generate-001" },
+    ],
+    startEndRequired: [{ label: "veo-3.1-generate-preview", value: "veo-3.1-generate-preview" }],
+    endFrameOptional: [{ label: "veo-3.1-generate-preview", value: "veo-3.1-generate-preview" }],
+    startFrameOptional: [],
+    multiImage: [],
+    reference: [{ label: "veo-3.1-generate-preview", value: "veo-3.1-generate-preview" }],
+    text: [
+      { label: "veo-2.0-generate-001", value: "veo-2.0-generate-001" },
+      { label: "veo-3.0-fast-generate-preview", value: "veo-3.0-fast-generate-preview" },
+      { label: "veo-3.0-generate-preview", value: "veo-3.0-generate-preview" },
+      { label: "veo-3.1-generate-preview", value: "veo-3.1-generate-preview" },
+    ],
+  },
+  wan: {
+    singleImage: [
+      { label: "wan2.6-i2v-flash", value: "wan2.6-i2v-flash" },
+      { label: "wan2.6-i2v", value: "wan2.6-i2v" },
+      { label: "wan2.5-i2v-preview", value: "wan2.5-i2v-preview" },
+      { label: "wan2.2-i2v-flash", value: "wan2.2-i2v-flash" },
+      { label: "wan2.2-i2v-plus", value: "wan2.2-i2v-plus" },
+      { label: "wanx2.1-i2v-plus", value: "wanx2.1-i2v-plus" },
+      { label: "wanx2.1-i2v-turbo", value: "wanx2.1-i2v-turbo" },
+    ],
+    startEndRequired: [
+      { label: "wanx2.1-kf2v-plus", value: "wanx2.1-kf2v-plus" },
+      { label: "wan2.2-kf2v-flash", value: "wan2.2-kf2v-flash" },
+    ],
+    endFrameOptional: [],
+    startFrameOptional: [],
+    multiImage: [],
+    reference: [],
+    text: [
+      { label: "wan2.6-t2v", value: "wan2.6-t2v" },
+      { label: "wan2.5-t2v-preview", value: "wan2.5-t2v-preview" },
+      { label: "wan2.2-t2v-plus", value: "wan2.2-t2v-plus" },
+      { label: "wanx2.1-t2v-turbo", value: "wanx2.1-t2v-turbo" },
+      { label: "wanx2.1-t2v-plus", value: "wanx2.1-t2v-plus" },
+    ],
+  },
+  vidu: {
+    singleImage: [
+      { label: "viduq3-pro", value: "viduq3-pro" },
+      { label: "viduq2-pro-fast", value: "viduq2-pro-fast" },
+      { label: "viduq2-pro", value: "viduq2-pro" },
+      { label: "viduq2-turbo", value: "viduq2-turbo" },
+      { label: "viduq1", value: "viduq1" },
+      { label: "viduq1-classic", value: "viduq1-classic" },
+      { label: "vidu2.0", value: "vidu2.0" },
+    ],
+    startEndRequired: [
+      { label: "vidu2.0", value: "vidu2.0" },
+      { label: "viduq1-classic", value: "viduq1-classic" },
+      { label: "viduq1", value: "viduq1" },
+      { label: "viduq2-turbo", value: "viduq2-turbo" },
+      { label: "viduq2-pro", value: "viduq2-pro" },
+      { label: "viduq2-pro-fast", value: "viduq2-pro-fast" },
+    ],
+    endFrameOptional: [],
+    startFrameOptional: [],
+    multiImage: [],
+    reference: [
+      { label: "vidu2.0", value: "vidu2.0" },
+      { label: "viduq1", value: "viduq1" },
+      { label: "viduq2-turbo", value: "viduq2-turbo" },
+      { label: "viduq2-pro", value: "viduq2-pro" },
+    ],
+    text: [
+      { label: "viduq1", value: "viduq1" },
+      { label: "viduq2-turbo", value: "viduq2-turbo" },
+      { label: "viduq2-pro", value: "viduq2-pro" },
+      { label: "viduq3-pro", value: "viduq3-pro" },
+    ],
   },
 };
 
 const currentModelPresets = computed(() => {
-  const { manufacturer, type } = modelForm.value;
+  const { manufacturer, modelType } = modelForm.value;
 
   if (manufacturer === "other" || !manufacturer) {
     return [];
   }
 
-  if (!type) {
+  if (!modelType) {
     return [];
   }
   const textTypes = ["usuallyText", "deepThinkingText"];
@@ -336,24 +432,37 @@ const currentModelPresets = computed(() => {
   const videoTypes = ["singleImage", "startEndRequired", "endFrameOptional", "startFrameOptional", "multiImage", "reference", "text"];
   let presets: Record<string, any> = {};
 
-  if (textTypes.includes(type)) {
+  if (textTypes.includes(modelType)) {
     presets = textModelPresets[manufacturer as keyof typeof textModelPresets] || {};
-  } else if (imageTypes.includes(type)) {
+  } else if (imageTypes.includes(modelType)) {
     presets = imageModelPresets[manufacturer as keyof typeof imageModelPresets] || {};
-  } else if (videoTypes.includes(type)) {
+  } else if (videoTypes.includes(modelType)) {
     presets = videoModelPresets[manufacturer as keyof typeof videoModelPresets] || {};
   }
 
-  return presets[type as keyof typeof presets] || [];
+  return presets[modelType as keyof typeof presets] || [];
 });
 const emit = defineEmits(["fetchModelList"]);
 //保存模型
 async function keep() {
+  let type = "";
+  const { modelType } = modelForm.value;
+
+  const textTypes = ["usuallyText", "deepThinkingText"];
+  const imageTypes = ["t2i", "i2i"];
+  const videoTypes = ["singleImage", "startEndRequired", "endFrameOptional", "startFrameOptional", "multiImage", "reference", "text"];
+  if (textTypes.includes(modelType)) {
+    type = "text";
+  } else if (imageTypes.includes(modelType)) {
+    type = "image";
+  } else if (videoTypes.includes(modelType)) {
+    type = "video";
+  }
   if (modelForm.value.id == 0) {
     try {
       await axios.post("/setting/addModel", {
-        name: modelForm.value.name,
-        type: modelForm.value.type,
+        modelType: modelForm.value.modelType,
+        type,
         model: modelForm.value.model,
         baseUrl: modelForm.value.baseUrl,
         manufacturer: modelForm.value.manufacturer,
@@ -368,8 +477,8 @@ async function keep() {
     try {
       await axios.post("/setting/updeteModel", {
         id: modelForm.value.id,
-        name: modelForm.value.name,
-        type: modelForm.value.type,
+        type,
+        modelType: modelForm.value.modelType,
         model: modelForm.value.model,
         baseUrl: modelForm.value.baseUrl,
         manufacturer: modelForm.value.manufacturer,
