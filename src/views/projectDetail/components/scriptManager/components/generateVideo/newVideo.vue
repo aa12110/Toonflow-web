@@ -294,7 +294,7 @@ onMounted(async () => {
     userId: Number(localStorage.getItem("userId")),
   });
   manufacturerList.value = res.data;
-  console.log("%c Line:295 🍇 manufacturerList.value", "background:#6ec1c2", manufacturerList.value);
+
   allManufacturerDisable.value = manufacturerList.value.length === 0;
 });
 watch(storyboardShow, (v) => {
@@ -305,7 +305,9 @@ watch(storyboardShow, (v) => {
 
 function addVideoConfig() {
   const defaultManufacturer: string = availableManufacturers.value[0]?.manufacturer || "volcengine";
-  const defaultModel: string = availableManufacturers.value[0] ? manufacturerList.value.find(i => i.id === availableManufacturers.value[0].value)?.model || "" : "";
+  const defaultModel: string = availableManufacturers.value[0]
+    ? manufacturerList.value.find((i) => i.id === availableManufacturers.value[0].value)?.model || ""
+    : "";
   const newConfig: VideoConfig = {
     id: ++configIdCounter,
     configId: undefined,
@@ -465,7 +467,6 @@ async function generateConfigPrompt(config: VideoConfig) {
     config.prompt = res.data;
     message.success("提示词生成成功");
   } catch (e: any) {
-    console.log("%c Line:463 🌽 e", "background:#e41a6a", e);
     message.error(e?.message || "生成失败");
   } finally {
     config.promptLoading = false;

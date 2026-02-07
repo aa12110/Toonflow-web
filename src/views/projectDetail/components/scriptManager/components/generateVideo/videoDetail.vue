@@ -131,7 +131,6 @@ const editableConfig = ref<VideoConfigData | null>(null);
 // 当前配置
 const config = computed(() => {
   if (!props.configId) return null;
-  console.log("%c Line:136 🥟 props.configId", "background:#93c0a4", props.configId);
 
   return videoConfigs.value.find((c) => c.id === props.configId) || null;
 });

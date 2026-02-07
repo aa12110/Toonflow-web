@@ -151,7 +151,6 @@ function getResultCount(configId: number): number {
 
 // 打开详情弹窗
 function openDetail(config: VideoConfig) {
-  console.log("%c Line:154 🍉 config", "background:#33a5ff", config);
   currentConfigId.value = config.id;
   detailModalShow.value = true;
 }

@@ -612,9 +612,6 @@ function getManufacturerSupportedResolutions(
 
   let resolutions: { label: string; value: string }[] = [];
   let resolutionLabel = "分辨率";
-  console.log("%c Line:616 🥟 model", "background:#fca650", model);
-
-  console.log("%c Line:617 🍢 allResolutions.size", "background:#33a5ff", allResolutions.size);
 
   if (allResolutions.size > 0) {
     resolutions = Array.from(allResolutions).map((res) => ({
@@ -738,7 +735,6 @@ export function getModelConfig(model: string): ModelConfig | undefined {
 
 // 根据模型配置动态生成厂商配置（向后兼容）
 export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfig {
-  console.log("%c Line:733 🍇 modelConfig", "background:#ffdd4d", modelConfig);
   // 从 type 生成 modes
   const modes = Array.from(new Set(modelConfig.type.map((t) => typeToModeMap[t])))
     .filter(Boolean)
@@ -746,12 +742,11 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
       label: modeLabels[mode] || mode,
       value: mode,
     }));
-  console.log("%c Line:735 🥃 modes", "background:#4fff4B", modes);
 
   // 从 aspectRatio 或 durationResolutionMap 生成 resolutions
   let resolutions: { label: string; value: string }[] = [];
   let resolutionLabel = "分辨率";
- if (modelConfig.durationResolutionMap.length > 0) {
+  if (modelConfig.durationResolutionMap.length > 0) {
     const allResolutions = new Set<string>();
     modelConfig.durationResolutionMap.forEach((map) => {
       map.resolution.forEach((res) => allResolutions.add(res));
@@ -760,8 +755,7 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
       label: res,
       value: res,
     }));
-  }else
-  if (modelConfig.aspectRatio.length > 0) {
+  } else if (modelConfig.aspectRatio.length > 0) {
     resolutionLabel = "画面比例";
     resolutions = modelConfig.aspectRatio.map((ratio) => ({
       label: ratio === "16:9" ? "16:9 横屏" : ratio === "9:16" ? "9:16 竖屏" : ratio,
@@ -817,7 +811,6 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
 
 // 获取厂商配置（优先使用新的模型配置系统）
 export function getManufacturerConfig(manufacturer: string, model?: string): ManufacturerConfig {
-  console.log("%c Line:818 🥚 model", "background:#3f7cff", model);
   // 如果提供了 model，尝试从 modelList 获取配置
   if (model) {
     const modelConfig = getModelConfig(model);

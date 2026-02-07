@@ -3,7 +3,7 @@
     <a-modal v-model:open="modelDataShow" title="模型数据" :footer="null" width="90%">
       <div class="data">
         <a-button style="margin-bottom: 10px" type="primary" ghost @click="addModelBtn">新增模型</a-button>
-        <vxe-table ref="tableRef" :data="tableData" :radio-config="{ highlight: true }">
+        <vxe-table ref="tableRef" :data="tableData" :radio-config="{ highlight: true, checkMethod: checkRadioMethod }">
           <vxe-column type="radio" title="选中" width="60"></vxe-column>
           <vxe-column field="manufacturer" title="厂商" width="100"></vxe-column>
           <vxe-column field="modelType" title="类型" width="150">
@@ -77,6 +77,12 @@ const modelDataShow = defineModel("modelDataShow", {
   type: Boolean,
   required: true,
 });
+const props = defineProps({
+  currentType: {
+    type: String,
+    default: "text",
+  },
+});
 interface ModelType {
   id: number;
   model: string;
@@ -128,6 +134,10 @@ function addModelBtn() {
   };
   modelShow.value = true;
 }
+// 单选框校验方法，只允许选择与 currentType 相同的 type
+function checkRadioMethod({ row }: { row: RowData }) {
+  return row.type == props.currentType;
+}
 const visibleMap = reactive<Record<string | number, boolean>>({});
 function setVisible(id: string | number, val: boolean) {
   visibleMap[id] = val;
@@ -138,7 +148,6 @@ const testImageModalVisible = ref(false);
 const testVideoVisible = ref(false);
 const testVideoResult = ref<string>("");
 async function testAi(row: RowData) {
-  console.log("%c Line:124 🍎 row", "background:#6ec1c2", row);
   const { model, apiKey, baseUrl, manufacturer } = row;
 
   if (!model) {
@@ -174,7 +183,6 @@ async function testAi(row: RowData) {
       baseURL: baseUrl || undefined,
       manufacturer,
     });
-    console.log("%c Line:164 🍺 res", "background:#93c0a4", res);
 
     if (row.type == "text") {
       message.success("连接成功！模型配置正确");
@@ -226,12 +234,12 @@ function delModelBtn(row: RowData) {
   axios
     .post("/setting/delModel", { id: row.id })
     .then(() => {
-      message.success("项目删除成功");
+      message.success("模型删除成功");
       fetchModelList();
       emit("modelList");
     })
     .catch(() => {
-      message.error("项目删除失败");
+      message.error("模型删除失败");
     });
 }
 const emit = defineEmits(["modelList"]);

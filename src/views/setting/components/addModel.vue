@@ -12,6 +12,7 @@
             <a-select-option value="wan">阿里（万相）</a-select-option>
             <a-select-option value="openai">OpenAI</a-select-option>
             <a-select-option value="vidu">Vidu</a-select-option>
+            <a-select-option value="anthropic">Anthropic</a-select-option>
             <a-select-option value="runninghub">RunningHUB</a-select-option>
             <a-select-option value="gemini">Gemini</a-select-option>
             <a-select-option value="other">其他</a-select-option>
@@ -41,7 +42,7 @@
           <a-input v-else v-model:value="modelForm.model" placeholder="请输入自定义模型标识" />
         </a-form-item>
         <a-form-item label="Base URL" v-if="modelForm.manufacturer !== 'runninghub'">
-          <a-input v-model:value="modelForm.baseUrl" />
+          <a-input v-model:value="modelForm.baseUrl" :placeholder="getDefaultBaseUrlPlaceholder()" />
         </a-form-item>
         <a-form-item label="API Key">
           <a-input v-model:value="modelForm.apiKey" />
@@ -56,10 +57,72 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import axios from "@/utils/axios";
 import { message } from "ant-design-vue";
 import type { SelectProps } from "ant-design-vue";
+
+// 厂商默认 BaseURL 配置
+const manufacturerDefaultBaseUrls: Record<string, Record<string, string>> = {
+  deepSeek: {
+    text: "https://api.deepseek.com/v1",
+    image: "",
+    video: "",
+  },
+  volcengine: {
+    text: "https://ark.cn-beijing.volces.com/api/v3",
+    image: "https://ark.cn-beijing.volces.com/api/v3/images/generations",
+    video: "https://ark.cn-beijing.volces.com/api/v3/contents/generations/tasks",
+  },
+  kling: {
+    text: "https://api.klingai.com",
+    image: "https://api-beijing.klingai.com/v1/images/omni-image",
+    video:
+      "https://api-beijing.klingai.com/v1/videos/image2video|https://api-beijing.klingai.com/v1/videos/text2video|https://api-beijing.klingai.com/v1/videos/text2video/{taskId}",
+  },
+  zhipu: {
+    text: "https://open.bigmodel.cn/api/paas/v4",
+    image: "",
+    video: "",
+  },
+  qwen: {
+    text: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    image: "",
+    video: "",
+  },
+  wan: {
+    text: "",
+    image: "",
+    video:
+      "https://dashscope.aliyuncs.com/api/v1/services/aigc/video-generation/video-synthesis|https://dashscope.aliyuncs.com/api/v1/services/aigc/image2video/video-synthesis|https://dashscope.aliyuncs.com/api/v1/tasks/{taskId}",
+  },
+  openai: {
+    text: "https://api.openai.com/v1",
+    image: "",
+    video: "",
+  },
+  vidu: {
+    text: "",
+    image: "https://api.vidu.cn/ent/v2/reference2image|https://api.vidu.cn/ent/v2/tasks/{id}/creations",
+    video: "https://api.vidu.cn/ent/v2/text2video|https://api.vidu.cn/ent/v2/img2video|https://api.vidu.cn/ent/v2/tasks",
+  },
+  gemini: {
+    text: "https://generativelanguage.googleapis.com/v1beta",
+    image: "https://generativelanguage.googleapis.com/v1beta",
+    video:
+      "https://generativelanguage.googleapis.com/v1beta/models/{model}:predictLongRunning|https://generativelanguage.googleapis.com/v1beta/{name}",
+  },
+  anthropic: {
+    text: "https://api.anthropic.com/v1",
+    image: "",
+    video: "",
+  },
+  other: {
+    text: "",
+    image: "",
+    video: "",
+  },
+};
 
 const modelShow = defineModel<boolean>("modelShow", {
   type: Boolean,
@@ -86,8 +149,8 @@ interface RowData {
   createTime: number;
   apiKey: string;
 }
-//模型类型选项
-const typeOptions = ref<SelectProps["options"]>([
+//所有模型类型选项
+const allTypeOptions: SelectProps["options"] = [
   {
     name: "文本模型",
     children: [
@@ -147,7 +210,57 @@ const typeOptions = ref<SelectProps["options"]>([
       },
     ],
   },
-]);
+];
+
+// 根据厂商动态计算可用的模型类型
+const typeOptions = computed<SelectProps["options"]>(() => {
+  const { manufacturer } = modelForm.value;
+
+  if (!manufacturer || manufacturer === "other") {
+    return allTypeOptions;
+  }
+
+  // 获取该厂商支持的所有模型类型
+  const supportedTypes = new Set<string>();
+
+  // 检查文本模型
+  if (textModelPresets[manufacturer as keyof typeof textModelPresets]) {
+    const textPresets = textModelPresets[manufacturer as keyof typeof textModelPresets];
+    Object.keys(textPresets).forEach((type) => {
+      if (textPresets[type as keyof typeof textPresets]?.length > 0) {
+        supportedTypes.add(type);
+      }
+    });
+  }
+
+  // 检查图片模型
+  if (imageModelPresets[manufacturer as keyof typeof imageModelPresets]) {
+    const imagePresets = imageModelPresets[manufacturer as keyof typeof imageModelPresets];
+    Object.keys(imagePresets).forEach((type) => {
+      if (imagePresets[type as keyof typeof imagePresets]?.length > 0) {
+        supportedTypes.add(type);
+      }
+    });
+  }
+
+  // 检查视频模型
+  if (videoModelPresets[manufacturer as keyof typeof videoModelPresets]) {
+    const videoPresets = videoModelPresets[manufacturer as keyof typeof videoModelPresets];
+    Object.keys(videoPresets).forEach((type) => {
+      if (videoPresets[type as keyof typeof videoPresets]?.length > 0) {
+        supportedTypes.add(type);
+      }
+    });
+  }
+
+  // 过滤出该厂商支持的类型
+  return allTypeOptions
+    .map((category) => ({
+      ...category,
+      children: category.children?.filter((child) => supportedTypes.has(child.value as string)),
+    }))
+    .filter((category) => category.children && category.children.length > 0);
+});
 //文本模型预设
 const textModelPresets = {
   deepSeek: {
@@ -160,10 +273,10 @@ const textModelPresets = {
       { label: "doubao-pro-4-chat", value: "doubao-pro-4-chat" },
     ],
     deepThinkingText: [
-      { label: "doubao-seed-1-8", value: "doubao-seed-1-8" },
-      { label: "doubao-seed-1-6", value: "doubao-seed-1-6" },
-      { label: "doubao-seed-1-6-lite", value: "doubao-seed-1-6-lite" },
-      { label: "doubao-seed-1-6-flash", value: "doubao-seed-1-6-flash" },
+      { label: "doubao-seed-1-8-251228", value: "doubao-seed-1-8-251228" },
+      { label: "doubao-seed-1-6-251015", value: "doubao-seed-1-6-251015" },
+      { label: "doubao-seed-1-6-lite-251015", value: "doubao-seed-1-6-lite-251015" },
+      { label: "doubao-seed-1-6-flash-250828", value: "doubao-seed-1-6-flash-250828" },
     ],
   },
   zhipu: {
@@ -204,7 +317,7 @@ const textModelPresets = {
     ],
     deepThinkingText: [],
   },
-  google: {
+  gemini: {
     usuallyText: [
       { label: "gemini-2.0-flash", value: "gemini-2.0-flash" },
       { label: "gemini-2.0-flash-lite", value: "gemini-2.0-flash-lite" },
@@ -236,10 +349,6 @@ const imageModelPresets = {
     t2i: [{ label: "doubao-seedream-4-5-251128", value: "doubao-seedream-4-5-251128" }],
     i2i: [{ label: "doubao-seedream-4-5-251128", value: "doubao-seedream-4-5-251128" }],
   },
-  gemini: {
-    t2i: [{ label: "gemini-2.5-flash-image", value: "gemini-2.5-flash-image" }],
-    i2i: [{ label: "gemini-3-pro-image-preview", value: "gemini-3-pro-image-preview" }],
-  },
   kling: {
     t2i: [
       { label: "kling-v1", value: "kling-v1" },
@@ -256,7 +365,7 @@ const imageModelPresets = {
       { label: "kling-v2-1", value: "kling-v2-1" },
     ],
   },
-  google: {
+  gemini: {
     t2i: [
       { label: "gemini-2.5-flash-image", value: "gemini-2.5-flash-image" },
       { label: "gemini-3-pro-image-preview", value: "gemini-3-pro-image-preview" },
@@ -442,6 +551,99 @@ const currentModelPresets = computed(() => {
 
   return presets[modelType as keyof typeof presets] || [];
 });
+
+// 获取当前模型类型对应的大类（text/image/video）
+function getModelTypeCategory(modelType: string): string {
+  const textTypes = ["usuallyText", "deepThinkingText"];
+  const imageTypes = ["t2i", "i2i"];
+  const videoTypes = ["singleImage", "startEndRequired", "endFrameOptional", "startFrameOptional", "multiImage", "reference", "text"];
+
+  if (textTypes.includes(modelType)) return "text";
+  if (imageTypes.includes(modelType)) return "image";
+  if (videoTypes.includes(modelType)) return "video";
+  return "";
+}
+
+// 监听厂商变化，清空不支持的模型类型
+watch(
+  () => modelForm.value.manufacturer,
+  (newManufacturer, oldManufacturer) => {
+    if (newManufacturer !== oldManufacturer && modelForm.value.modelType) {
+      // 如果新厂商是 "other"，保留当前选择
+      if (newManufacturer === "other") {
+        return;
+      }
+
+      // 检查当前选择的模型类型是否被新厂商支持
+      const supportedTypes = new Set<string>();
+
+      if (textModelPresets[newManufacturer as keyof typeof textModelPresets]) {
+        const textPresets = textModelPresets[newManufacturer as keyof typeof textModelPresets];
+        Object.keys(textPresets).forEach((type) => {
+          if (textPresets[type as keyof typeof textPresets]?.length > 0) {
+            supportedTypes.add(type);
+          }
+        });
+      }
+
+      if (imageModelPresets[newManufacturer as keyof typeof imageModelPresets]) {
+        const imagePresets = imageModelPresets[newManufacturer as keyof typeof imageModelPresets];
+        Object.keys(imagePresets).forEach((type) => {
+          if (imagePresets[type as keyof typeof imagePresets]?.length > 0) {
+            supportedTypes.add(type);
+          }
+        });
+      }
+
+      if (videoModelPresets[newManufacturer as keyof typeof videoModelPresets]) {
+        const videoPresets = videoModelPresets[newManufacturer as keyof typeof videoModelPresets];
+        Object.keys(videoPresets).forEach((type) => {
+          if (videoPresets[type as keyof typeof videoPresets]?.length > 0) {
+            supportedTypes.add(type);
+          }
+        });
+      }
+
+      // 如果当前选择的类型不被支持，清空选择
+      if (!supportedTypes.has(modelForm.value.modelType)) {
+        modelForm.value.modelType = "";
+        modelForm.value.model = "";
+      }
+    }
+  },
+);
+
+// 监听厂商和模型类型变化，自动填充默认 baseUrl
+watch(
+  () => [modelForm.value.manufacturer, modelForm.value.modelType],
+  ([newManufacturer, newModelType]) => {
+    if (newManufacturer && newModelType && newManufacturer !== "runninghub") {
+      const category = getModelTypeCategory(newModelType as string);
+      if (category && manufacturerDefaultBaseUrls[newManufacturer]) {
+        const defaultUrl = manufacturerDefaultBaseUrls[newManufacturer][category];
+        if (defaultUrl) {
+          modelForm.value.baseUrl = defaultUrl;
+        }
+      }
+    }
+  },
+);
+// 获取默认 BaseURL 的 placeholder
+function getDefaultBaseUrlPlaceholder(): string {
+  const { manufacturer, modelType } = modelForm.value;
+  if (!manufacturer || !modelType || manufacturer === "runninghub") {
+    return "请输入 Base URL";
+  }
+
+  const category = getModelTypeCategory(modelType);
+  if (category && manufacturerDefaultBaseUrls[manufacturer]) {
+    const defaultUrl = manufacturerDefaultBaseUrls[manufacturer][category];
+    return defaultUrl ? `默认: ${defaultUrl}` : "请输入 Base URL";
+  }
+
+  return "请输入 Base URL";
+}
+
 const emit = defineEmits(["fetchModelList"]);
 //保存模型
 async function keep() {

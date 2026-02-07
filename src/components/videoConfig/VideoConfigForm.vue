@@ -99,7 +99,9 @@
       </div>
       <div class="form-row" v-if="editable">
         <label></label>
-        <span class="tip">拖拽调整顺序 | {{ localConfig.images?.length || 0 }}/{{ getMaxImages(localConfig.manufacturer, localConfig.model) }}张</span>
+        <span class="tip">
+          拖拽调整顺序 | {{ localConfig.images?.length || 0 }}/{{ getMaxImages(localConfig.manufacturer, localConfig.model) }}张
+        </span>
       </div>
     </template>
 
@@ -282,9 +284,9 @@ const selectorInitialImages = computed(() => {
 // 厂商变更
 function onManufacturerChange() {
   const selectedManufacturer = manufacturerList.value.find((i) => i.id == localConfig.aiConfigId);
-  console.log("%c Line:285 🥕 selectedManufacturer", "background:#42b983", selectedManufacturer);
+
   if (!selectedManufacturer) return;
-  
+
   localConfig.manufacturer = selectedManufacturer.manufacturer;
   localConfig.model = selectedManufacturer.model;
 
@@ -359,7 +361,6 @@ async function generatePrompt() {
     emitChange();
     message.success("提示词生成成功");
   } catch (e: any) {
-    console.log("%c Line:350 🍐 e", "background:#ffdd4d", e);
     message.error(e?.message || "生成失败");
   } finally {
     promptLoading.value = false;
@@ -387,7 +388,6 @@ onMounted(async () => {
   });
   manufacturerList.value = res.data;
   if (!localConfig.model) {
-    console.log("%c Line:295 🍇 manufacturerList.value", "background:#6ec1c2", manufacturerList.value);
     localConfig.aiConfigId = undefined;
     selectManfactDis.value = false;
   } else {
