@@ -652,8 +652,13 @@ interface GridItem {
   x: number;
   y: number;
   cells: Array<{ src?: string; prompt?: string; id?: string }>;
+  fragmentContent: string;
+  assetsTags: AssetsType[];
 }
-
+interface AssetsType {
+  type: "role" | "props" | "scene";
+  text: string;
+}
 // 根据后端推送的 shots 数据更新 gridData
 function updateGridDataFromShots(shots: GridItem[]) {
   if (!shots || !Array.isArray(shots)) return;
@@ -682,6 +687,8 @@ function updateGridDataFromShots(shots: GridItem[]) {
       x,
       y,
       cells: item.cells || [],
+      fragmentContent: item.fragmentContent || "",
+      assetsTags: item.assetsTags || [],
     };
   });
 
