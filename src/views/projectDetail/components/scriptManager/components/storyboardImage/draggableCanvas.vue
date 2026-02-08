@@ -12,12 +12,14 @@
           top: grid.y + 'px',
           zIndex: grid.zIndex || 1,
         }">
-        <div class="topMenu" @mousedown.stop="handleGridMouseDown($event, grid)">
+        <div class="topMenu fc" @mousedown.stop="handleGridMouseDown($event, grid)">
           <div class="gridTitle" :title="grid.title">{{ grid.title }}</div>
-          <div class="btnList">
-            <!-- <a-button type="primary" size="small" :disabled="isGenerating(grid.id)" @click="generatingImage(grid)">重新生成</a-button> -->
+          <div class="fragmentContent">{{ grid.fragmentContent }}</div>
+          <div class="f" style="gap: 6px">
+            <el-tag v-for="(sub, index) in grid.assetsTags" :key="index">{{ sub.text }}</el-tag>
           </div>
         </div>
+
         <a-spin :spinning="isGenerating(grid.id)" tip="生成中...">
           <div class="grid" :style="getGridStyle(grid.cells.length)">
             <div v-for="(cell, index) in grid.cells" :key="index" class="gridItem">
@@ -419,9 +421,6 @@ $hoverBg: #e8f4ff;
     }
   }
   .topMenu {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 8px;
     cursor: move;
     padding: 4px;
@@ -439,6 +438,14 @@ $hoverBg: #e8f4ff;
       overflow: hidden;
       text-overflow: ellipsis;
       margin-right: 8px;
+    }
+    .fragmentContent {
+      display: -webkit-box;
+      -webkit-line-clamp: 2; /* 限制为2行 */
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .btnList {
       & > * {
