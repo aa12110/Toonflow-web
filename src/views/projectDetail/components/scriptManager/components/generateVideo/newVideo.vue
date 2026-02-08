@@ -308,11 +308,12 @@ function addVideoConfig() {
   const defaultModel: string = availableManufacturers.value[0]
     ? manufacturerList.value.find((i) => i.id === availableManufacturers.value[0].value)?.model || ""
     : "";
+
   const newConfig: VideoConfig = {
     id: ++configIdCounter,
     configId: undefined,
     manufacturer: "",
-    model: "",
+    model: defaultModel,
     mode: getDefaultMode(defaultManufacturer, defaultModel) as VideoConfig["mode"],
     startFrame: null,
     endFrame: null,

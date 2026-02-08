@@ -72,6 +72,7 @@ export const manufacturerLabels: Record<string, string> = {
   vidu: "Vidu",
   wan: "万象",
   gemini: "Gemini Veo",
+  other: "其他",
 };
 
 // 模式标签映射
@@ -95,6 +96,14 @@ export const typeToModeMap: Record<VideoGenerationType, VideoConfigData["mode"]>
 
 // 视频模型列表
 export const modelList: ModelConfig[] = [
+  {
+    manufacturer: "other",
+    model: "",
+    durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
+    aspectRatio: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"],
+    type: ["text", "endFrameOptional"],
+    audio: true,
+  },
   // ================== 火山引擎/豆包系列 ==================
   // doubao-seedance-1-5-pro 文生视频/图生视频
   {
@@ -718,11 +727,12 @@ export const manufacturerConfigs: Record<string, ManufacturerConfig> = {
   gemini: generateManufacturerConfig("gemini"),
   runninghub: generateManufacturerConfig("runninghub"),
   apimart: generateManufacturerConfig("apimart"),
+  other: generateManufacturerConfig("other"),
 };
 
 // 根据模型名称获取模型配置
-export function getModelConfig(model: string): ModelConfig | undefined {
-  return modelList.find((m) => m.model === model);
+export function getModelConfig(model: string, manufacturer: string): ModelConfig | undefined {
+  return modelList.find((m) => m.model === model && m.manufacturer === manufacturer);
 }
 
 // 根据模型配置动态生成厂商配置（向后兼容）
@@ -799,7 +809,8 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
 export function getManufacturerConfig(manufacturer: string, model?: string): ManufacturerConfig {
   // 如果提供了 model，尝试从 modelList 获取配置
   if (model) {
-    const modelConfig = getModelConfig(model);
+    const modelConfig = getModelConfig(model, manufacturer);
+
     if (modelConfig) {
       return getModelBasedConfig(modelConfig);
     }
