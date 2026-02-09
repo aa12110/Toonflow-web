@@ -168,6 +168,12 @@
                   <span class="tip">{{ getDurationTip(config.manufacturer, config.model) }}</span>
                 </template>
               </div>
+              <!-- 声音开关 -->
+              <div class="formRow" v-if="getAudioSupport(config.manufacturer, config.model)">
+                <label>声音</label>
+                <a-switch v-model:checked="config.audioEnabled" size="small" />
+                <span class="tip" style="margin-left: 8px">{{ config.audioEnabled ? "开启" : "关闭" }}</span>
+              </div>
               <!-- 视频提示词 -->
               <div class="formRow promptRow">
                 <label>提示词</label>
@@ -241,6 +247,7 @@ import {
   getDurationRange,
   getDurationTip,
   getMaxImages,
+  getAudioSupport,
 } from "@/components/videoConfig";
 
 const storeInstance = store();
@@ -260,6 +267,7 @@ interface VideoConfig {
   duration: number;
   prompt: string;
   promptLoading: boolean;
+  audioEnabled: boolean;
 }
 interface Storyboard {
   id: number;
@@ -322,6 +330,7 @@ function addVideoConfig() {
     duration: getDefaultDuration(defaultManufacturer, defaultModel),
     prompt: "",
     promptLoading: false,
+    audioEnabled: false,
   };
   videoConfigs.value.push(newConfig);
 }
@@ -514,6 +523,7 @@ async function handleOk() {
         resolution: config.resolution,
         duration: config.duration,
         prompt: config.prompt,
+        audioEnabled: config.audioEnabled,
       });
 
       // 将后端返回的配置添加到 store

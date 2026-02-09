@@ -25,6 +25,7 @@ export interface VideoConfig {
   prompt: string;
   selectedResultId: number | null; // 选中的生成结果ID
   createdAt: string;
+  audioEnabled: boolean;
 }
 
 // 视频生成结果
@@ -153,7 +154,6 @@ export default defineStore(
     async function fetchVideoConfigs(scriptId: number) {
       try {
         const { data } = await axios.post("/video/getVideoConfigs", { scriptId });
-        console.log("%c Line:156 🍞 data", "background:#ffdd4d", data);
         if (data && Array.isArray(data)) {
           // 过滤掉当前脚本的旧配置
           videoConfigs.value = [];
@@ -175,6 +175,7 @@ export default defineStore(
               prompt: item.prompt || "",
               selectedResultId: item.selectedResultId,
               createdAt: item.createdAt || new Date().toISOString(),
+              audioEnabled: item.audioEnabled,
             };
             videoConfigs.value.push(config);
 
@@ -207,6 +208,7 @@ export default defineStore(
         prompt: configData.prompt || "",
         selectedResultId: configData.selectedResultId || null,
         createdAt: configData.createdAt || new Date().toISOString(),
+        audioEnabled: configData.audioEnabled,
       };
       videoConfigs.value.push(newConfig);
 
@@ -285,6 +287,7 @@ export default defineStore(
         filePath: videoImgs,
         duration: config.duration,
         prompt: config.prompt,
+        audioEnabled: config.audioEnabled,
       });
 
       // 添加新的结果到列表（使用后端返回的真实 ID）
@@ -328,7 +331,7 @@ export default defineStore(
     // 更新配置（包括图片字段）
     function updateConfigFull(
       configId: number,
-      updates: Partial<Pick<VideoConfig, "prompt" | "resolution" | "duration" | "startFrame" | "endFrame" | "images" | "mode">>,
+      updates: Partial<Pick<VideoConfig, "prompt" | "resolution" | "duration" | "startFrame" | "endFrame" | "images" | "mode" | "audioEnabled">>,
     ) {
       const config = videoConfigs.value.find((c) => c.id === configId);
       if (config) {
@@ -339,6 +342,7 @@ export default defineStore(
         if (updates.endFrame !== undefined) config.endFrame = updates.endFrame;
         if (updates.images !== undefined) config.images = [...updates.images];
         if (updates.mode !== undefined) config.mode = updates.mode;
+        if (updates.audioEnabled !== undefined) config.audioEnabled = updates.audioEnabled;
       }
     }
 

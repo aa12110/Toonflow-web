@@ -38,6 +38,7 @@ export interface VideoConfigData {
   aiConfigId: number | undefined;
   model: string;
   mode: "startEnd" | "multi" | "single" | "text";
+  audio?: 0 | 1;
   startFrame: ImageItem | null;
   endFrame: ImageItem | null;
   images: ImageItem[];
@@ -45,6 +46,7 @@ export interface VideoConfigData {
   duration: number;
   prompt: string;
   promptLoading?: boolean;
+  audioEnabled: boolean;
 }
 
 // 厂商配置定义（向后兼容）
@@ -882,4 +884,24 @@ export function getDurationTip(manufacturer: string, model?: string): string {
 // 获取最大图片数（支持模型参数）
 export function getMaxImages(manufacturer: string, model?: string): number {
   return getManufacturerConfig(manufacturer, model).maxImages;
+}
+
+// 获取模型是否支持音频（支持模型参数）
+export function getAudioSupport(manufacturer: string, model?: string): boolean {
+  // other 厂商默认支持音频
+  if (manufacturer === "other") {
+    return true;
+  }
+
+  // 如果提供了 model，从 modelList 获取配置
+  if (model) {
+    const modelConfig = getModelConfig(model, manufacturer);
+    if (modelConfig) {
+      return modelConfig.audio;
+    }
+  }
+
+  // 检查该厂商是否有任何模型支持音频
+  const manufacturerModels = modelList.filter((m) => m.manufacturer === manufacturer);
+  return manufacturerModels.some((m) => m.audio);
 }

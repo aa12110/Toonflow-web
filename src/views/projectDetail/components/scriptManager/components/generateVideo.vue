@@ -77,7 +77,7 @@
             <div class="info-wrapper">
               <div class="config-info">
                 <span class="manufacturer-tag">{{ getManufacturerLabel(config.manufacturer) }}</span>
-                <span class="resolution-tag">{{ config.resolution }}</span>
+                <span class="resolution-tag" v-if="config.resolution">{{ config.resolution }}</span>
                 <span class="duration-tag">{{ config.duration }}s</span>
               </div>
               <p class="prompt-text">{{ config.prompt || "暂无描述" }}</p>

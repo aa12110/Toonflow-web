@@ -163,6 +163,7 @@ watch(
         resolution: newConfig.resolution,
         duration: newConfig.duration,
         prompt: newConfig.prompt,
+        audioEnabled: newConfig.audioEnabled,
       };
     } else {
       editableConfig.value = null;
@@ -187,6 +188,7 @@ async function handleConfigFormChange(updatedConfig: VideoConfigData) {
     endFrame: updatedConfig.endFrame,
     images: updatedConfig.images,
     mode: updatedConfig.mode,
+    audioEnabled: updatedConfig.audioEnabled,
   });
 
   // 调用后端接口更新配置
@@ -199,6 +201,7 @@ async function handleConfigFormChange(updatedConfig: VideoConfigData) {
       startFrame: updatedConfig.startFrame,
       endFrame: updatedConfig.endFrame,
       images: updatedConfig.images,
+      audioEnabled: updatedConfig.audioEnabled,
     });
   } catch (error: any) {
     console.error("更新配置失败:", error);

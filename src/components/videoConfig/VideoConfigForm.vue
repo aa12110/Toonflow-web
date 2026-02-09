@@ -171,7 +171,12 @@
         <span v-else class="value">{{ localConfig.duration }}秒</span>
       </template>
     </div>
-
+    <!-- 声音开关 -->
+    <div class="form-row" v-if="getAudioSupport(localConfig.manufacturer, localConfig.model)">
+      <label>声音</label>
+      <a-switch v-model:checked="localConfig.audioEnabled" size="small" @change="emitChange()" />
+      <span class="tip" style="margin-left: 8px">{{ localConfig.audioEnabled ? "开启" : "关闭" }}</span>
+    </div>
     <!-- 视频提示词 -->
     <div class="form-row prompt-row">
       <div class="prompt-header">
@@ -219,6 +224,7 @@ import {
   getDurationRange,
   getDurationTip,
   getMaxImages,
+  getAudioSupport,
 } from "./manufacturerConfig";
 
 const props = withDefaults(
@@ -312,7 +318,6 @@ function onModeChange() {
     }
   } else if (localConfig.mode == "multi") {
     if (localConfig.images.length) {
-      console.log("%c Line:317 🍡", "background:#4fff4B");
       localConfig.images = localConfig.images.slice(0, 10);
     }
   } else if (localConfig.mode == "startEnd") {
@@ -321,7 +326,6 @@ function onModeChange() {
     }
   }
   localConfig.images = [];
-  console.log("%c Line:308 🥖 localConfig", "background:#33a5ff", localConfig);
 
   emitChange();
 }
@@ -362,10 +366,10 @@ async function generatePrompt() {
     images.push(...localConfig.images);
   }
 
-  if (images.length === 0) {
-    message.warning("请先选择图片");
-    return;
-  }
+  // if (images.length === 0) {
+  //   message.warning("请先选择图片");
+  //   return;
+  // }
 
   promptLoading.value = true;
   try {
@@ -374,6 +378,7 @@ async function generatePrompt() {
       images: images.map((img) => ({ filePath: img.filePath, prompt: img.prompt })),
       duration: localConfig.duration,
       type: localConfig.mode,
+      videoConfigId: localConfig.id,
     });
     localConfig.prompt = res.data;
     emitChange();
@@ -387,9 +392,8 @@ async function generatePrompt() {
 
 // 触发变更事件
 function emitChange() {
-  console.log("%c Line:373 🥓", "background:#465975");
   const configCopy = { ...localConfig };
-  console.log("%c Line:376 🍎 configCopy", "background:#fca650", configCopy);
+
   emit("update:config", configCopy);
   emit("change", configCopy);
 }
@@ -399,7 +403,11 @@ const manufacturerAllRecord: Record<string, string> = Object.values(manufacturer
 }, {});
 const availableManufacturers = computed(() => {
   if (manufacturerList.value.length === 0) return [];
-  return manufacturerList.value.map((i) => ({ label: i.model+'—' + manufacturerAllRecord[i.manufacturer], value: i.id, manufacturer: i.manufacturer }));
+  return manufacturerList.value.map((i) => ({
+    label: i.model + "—" + manufacturerAllRecord[i.manufacturer],
+    value: i.id,
+    manufacturer: i.manufacturer,
+  }));
 });
 const manufacturerList = ref<{ model: string; manufacturer: string; id: number }[]>([]);
 onMounted(async () => {
