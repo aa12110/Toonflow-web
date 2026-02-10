@@ -13,7 +13,6 @@
       <label>模型</label>
       <span class="value">{{ localConfig.model }}</span>
     </div>
-
     <!-- 模式选择 -->
     <div class="form-row" v-if="editable">
       <label>模式</label>
@@ -99,7 +98,9 @@
       </div>
       <div class="form-row" v-if="editable">
         <label></label>
-        <span class="tip">拖拽调整顺序 | {{ localConfig.images?.length || 0 }}/{{ getMaxImages(localConfig.manufacturer, localConfig.model) }}张</span>
+        <span class="tip">
+          拖拽调整顺序 | {{ localConfig.images?.length || 0 }}/{{ getMaxImages(localConfig.manufacturer, localConfig.model) }}张
+        </span>
       </div>
     </template>
 
@@ -133,7 +134,7 @@
     </template>
 
     <!-- 分辨率/比例 -->
-    <div class="form-row">
+    <div class="form-row" v-if="getResolutionOptions(localConfig.manufacturer, localConfig.model).length">
       <label>{{ getResolutionLabel(localConfig.manufacturer, localConfig.model) }}</label>
       <a-select v-if="editable" v-model:value="localConfig.resolution" size="small" style="flex: 1" @change="emitChange">
         <a-select-option v-for="res in getResolutionOptions(localConfig.manufacturer, localConfig.model)" :key="res.value" :value="res.value">
@@ -170,7 +171,12 @@
         <span v-else class="value">{{ localConfig.duration }}秒</span>
       </template>
     </div>
-
+    <!-- 声音开关 -->
+    <div class="form-row" v-if="getAudioSupport(localConfig.manufacturer, localConfig.model)">
+      <label>声音</label>
+      <a-switch v-model:checked="localConfig.audioEnabled" size="small" @change="emitChange()" />
+      <span class="tip" style="margin-left: 8px">{{ localConfig.audioEnabled ? "开启" : "关闭" }}</span>
+    </div>
     <!-- 视频提示词 -->
     <div class="form-row prompt-row">
       <div class="prompt-header">
@@ -218,6 +224,7 @@ import {
   getDurationRange,
   getDurationTip,
   getMaxImages,
+  getAudioSupport,
 } from "./manufacturerConfig";
 
 const props = withDefaults(
@@ -282,9 +289,9 @@ const selectorInitialImages = computed(() => {
 // 厂商变更
 function onManufacturerChange() {
   const selectedManufacturer = manufacturerList.value.find((i) => i.id == localConfig.aiConfigId);
-  console.log("%c Line:285 🥕 selectedManufacturer", "background:#42b983", selectedManufacturer);
+
   if (!selectedManufacturer) return;
-  
+
   localConfig.manufacturer = selectedManufacturer.manufacturer;
   localConfig.model = selectedManufacturer.model;
 
@@ -302,7 +309,24 @@ function onManufacturerChange() {
 function onModeChange() {
   localConfig.startFrame = null;
   localConfig.endFrame = null;
+  if (localConfig.mode == "text") {
+    localConfig.images = [];
+  } else if (localConfig.mode == "single") {
+    //如有 图片，则只留一张
+    if (localConfig.images.length > 1) {
+      localConfig.images = [localConfig.images[0]];
+    }
+  } else if (localConfig.mode == "multi") {
+    if (localConfig.images.length) {
+      localConfig.images = localConfig.images.slice(0, 10);
+    }
+  } else if (localConfig.mode == "startEnd") {
+    if (localConfig.images.length > 2) {
+      localConfig.images = localConfig.images.slice(0, 2);
+    }
+  }
   localConfig.images = [];
+
   emitChange();
 }
 
@@ -342,10 +366,10 @@ async function generatePrompt() {
     images.push(...localConfig.images);
   }
 
-  if (images.length === 0) {
-    message.warning("请先选择图片");
-    return;
-  }
+  // if (images.length === 0) {
+  //   message.warning("请先选择图片");
+  //   return;
+  // }
 
   promptLoading.value = true;
   try {
@@ -354,12 +378,12 @@ async function generatePrompt() {
       images: images.map((img) => ({ filePath: img.filePath, prompt: img.prompt })),
       duration: localConfig.duration,
       type: localConfig.mode,
+      videoConfigId: localConfig.id,
     });
     localConfig.prompt = res.data;
     emitChange();
     message.success("提示词生成成功");
   } catch (e: any) {
-    console.log("%c Line:350 🍐 e", "background:#ffdd4d", e);
     message.error(e?.message || "生成失败");
   } finally {
     promptLoading.value = false;
@@ -369,6 +393,7 @@ async function generatePrompt() {
 // 触发变更事件
 function emitChange() {
   const configCopy = { ...localConfig };
+
   emit("update:config", configCopy);
   emit("change", configCopy);
 }
@@ -378,7 +403,11 @@ const manufacturerAllRecord: Record<string, string> = Object.values(manufacturer
 }, {});
 const availableManufacturers = computed(() => {
   if (manufacturerList.value.length === 0) return [];
-  return manufacturerList.value.map((i) => ({ label: i.model + manufacturerAllRecord[i.manufacturer], value: i.id, manufacturer: i.manufacturer }));
+  return manufacturerList.value.map((i) => ({
+    label: i.model + "—" + manufacturerAllRecord[i.manufacturer],
+    value: i.id,
+    manufacturer: i.manufacturer,
+  }));
 });
 const manufacturerList = ref<{ model: string; manufacturer: string; id: number }[]>([]);
 onMounted(async () => {
@@ -387,7 +416,6 @@ onMounted(async () => {
   });
   manufacturerList.value = res.data;
   if (!localConfig.model) {
-    console.log("%c Line:295 🍇 manufacturerList.value", "background:#6ec1c2", manufacturerList.value);
     localConfig.aiConfigId = undefined;
     selectManfactDis.value = false;
   } else {

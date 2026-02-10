@@ -36,7 +36,21 @@
 
               <!-- 已选择结果且成功 -->
               <template v-else-if="getSelectedResult(config.id)?.state === 1">
-                <img :src="getSelectedResult(config.id)?.firstFrame || getSelectedResult(config.id)?.filePath" class="cover-image" alt="视频封面" />
+                <img
+                  v-if="getSelectedResult(config.id)?.firstFrame"
+                  :src="getSelectedResult(config.id)?.firstFrame"
+                  class="cover-image"
+                  alt="视频封面" />
+                <video
+                  v-else-if="getSelectedResult(config.id)?.filePath"
+                  :src="getSelectedResult(config.id)?.filePath"
+                  class="cover-image"
+                  preload="metadata"></video>
+                <div v-else class="video-placeholder">
+                  <i-film :size="32" />
+                  <span>视频</span>
+                </div>
+                <!-- <img :src="getSelectedResult(config.id)?.firstFrame || getSelectedResult(config.id)?.filePath" class="cover-image" alt="视频封面" /> -->
                 <div class="play-overlay">
                   <div class="play-button">
                     <i-play-one theme="filled" :size="32" fill="#fff" />
@@ -63,7 +77,7 @@
             <div class="info-wrapper">
               <div class="config-info">
                 <span class="manufacturer-tag">{{ getManufacturerLabel(config.manufacturer) }}</span>
-                <span class="resolution-tag">{{ config.resolution }}</span>
+                <span class="resolution-tag" v-if="config.resolution">{{ config.resolution }}</span>
                 <span class="duration-tag">{{ config.duration }}s</span>
               </div>
               <p class="prompt-text">{{ config.prompt || "暂无描述" }}</p>
@@ -151,7 +165,6 @@ function getResultCount(configId: number): number {
 
 // 打开详情弹窗
 function openDetail(config: VideoConfig) {
-  console.log("%c Line:154 🍉 config", "background:#33a5ff", config);
   currentConfigId.value = config.id;
   detailModalShow.value = true;
 }
@@ -273,6 +286,7 @@ function handleDeleteConfig(configId: number) {
 
         .play-overlay {
           opacity: 1;
+          z-index: 9999999999;
         }
 
         .cover-image {

@@ -133,7 +133,7 @@
       </div>
     </div>
     <PromptEditor v-model="promptEditorShow" />
-    <newModelData v-model:modelDataShow="modelDataShow" v-model:configingModel="configingModel" @modelList="modelList" />
+    <newModelData v-model:modelDataShow="modelDataShow" :currentType="currentType" v-model:configingModel="configingModel" @modelList="modelList" />
   </div>
 </template>
 
@@ -147,8 +147,10 @@ interface ModelType {
   id: number;
   model: string;
   name: string;
+  key: string;
 }
 const modelData = ref<ModelType[]>([]);
+const currentType = ref("");
 onMounted(() => {
   modelList();
 });
@@ -162,6 +164,13 @@ const configingModel = ref<ModelType>();
 // 开始配置
 function startConfig(item: ModelType) {
   configingModel.value = item;
+  const imageKey = ["editImage", "storyboardImage", "assetsImage"];
+  const textKey = ["storyboardAgent", "outlineScriptAgent", "assetsPrompt", "generateScript", "videoPrompt"];
+  if (imageKey.includes(item.key)) {
+    currentType.value = "image";
+  } else if (textKey.includes(item.key)) {
+    currentType.value = "text";
+  }
   modelDataShow.value = true;
 }
 

@@ -38,6 +38,7 @@ export interface VideoConfigData {
   aiConfigId: number | undefined;
   model: string;
   mode: "startEnd" | "multi" | "single" | "text";
+  audio?: 0 | 1;
   startFrame: ImageItem | null;
   endFrame: ImageItem | null;
   images: ImageItem[];
@@ -45,6 +46,7 @@ export interface VideoConfigData {
   duration: number;
   prompt: string;
   promptLoading?: boolean;
+  audioEnabled: boolean;
 }
 
 // 厂商配置定义（向后兼容）
@@ -72,6 +74,7 @@ export const manufacturerLabels: Record<string, string> = {
   vidu: "Vidu",
   wan: "万象",
   gemini: "Gemini Veo",
+  other: "其他",
 };
 
 // 模式标签映射
@@ -95,6 +98,14 @@ export const typeToModeMap: Record<VideoGenerationType, VideoConfigData["mode"]>
 
 // 视频模型列表
 export const modelList: ModelConfig[] = [
+  {
+    manufacturer: "other",
+    model: "",
+    durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
+    aspectRatio: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"],
+    type: ["text", "endFrameOptional"],
+    audio: true,
+  },
   // ================== 火山引擎/豆包系列 ==================
   // doubao-seedance-1-5-pro 文生视频/图生视频
   {
@@ -600,11 +611,9 @@ function getManufacturerSupportedResolutions(
     manufacturerModels = manufacturerModels.filter((m) => m.model === model);
   }
 
-  const allAspectRatios = new Set<string>();
   const allResolutions = new Set<string>();
 
   manufacturerModels.forEach((model) => {
-    model.aspectRatio.forEach((ratio) => allAspectRatios.add(ratio));
     model.durationResolutionMap.forEach((map) => {
       map.resolution.forEach((res) => allResolutions.add(res));
     });
@@ -612,20 +621,11 @@ function getManufacturerSupportedResolutions(
 
   let resolutions: { label: string; value: string }[] = [];
   let resolutionLabel = "分辨率";
-  console.log("%c Line:616 🥟 model", "background:#fca650", model);
-
-  console.log("%c Line:617 🍢 allResolutions.size", "background:#33a5ff", allResolutions.size);
 
   if (allResolutions.size > 0) {
     resolutions = Array.from(allResolutions).map((res) => ({
       label: res,
       value: res,
-    }));
-  } else if (allAspectRatios.size > 0) {
-    resolutionLabel = "画面比例";
-    resolutions = Array.from(allAspectRatios).map((ratio) => ({
-      label: ratio === "16:9" ? "16:9 横屏" : ratio === "9:16" ? "9:16 竖屏" : ratio,
-      value: ratio,
     }));
   }
   return { resolutions, resolutionLabel };
@@ -691,7 +691,7 @@ function getManufacturerMaxImages(manufacturer: string, model?: string): number 
 
   manufacturerModels.forEach((model) => {
     if (model.type.includes("multiImage")) {
-      maxImages = Math.max(maxImages, 4);
+      maxImages = Math.max(maxImages, 9);
     } else if (model.type.includes("startEndRequired") || model.type.includes("endFrameOptional")) {
       maxImages = Math.max(maxImages, 2);
     }
@@ -729,16 +729,16 @@ export const manufacturerConfigs: Record<string, ManufacturerConfig> = {
   gemini: generateManufacturerConfig("gemini"),
   runninghub: generateManufacturerConfig("runninghub"),
   apimart: generateManufacturerConfig("apimart"),
+  other: generateManufacturerConfig("other"),
 };
 
 // 根据模型名称获取模型配置
-export function getModelConfig(model: string): ModelConfig | undefined {
-  return modelList.find((m) => m.model === model);
+export function getModelConfig(model: string, manufacturer: string): ModelConfig | undefined {
+  return modelList.find((m) => m.model === model && m.manufacturer === manufacturer);
 }
 
 // 根据模型配置动态生成厂商配置（向后兼容）
 export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfig {
-  console.log("%c Line:733 🍇 modelConfig", "background:#ffdd4d", modelConfig);
   // 从 type 生成 modes
   const modes = Array.from(new Set(modelConfig.type.map((t) => typeToModeMap[t])))
     .filter(Boolean)
@@ -746,12 +746,11 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
       label: modeLabels[mode] || mode,
       value: mode,
     }));
-  console.log("%c Line:735 🥃 modes", "background:#4fff4B", modes);
 
   // 从 aspectRatio 或 durationResolutionMap 生成 resolutions
   let resolutions: { label: string; value: string }[] = [];
   let resolutionLabel = "分辨率";
- if (modelConfig.durationResolutionMap.length > 0) {
+  if (modelConfig.durationResolutionMap.length > 0) {
     const allResolutions = new Set<string>();
     modelConfig.durationResolutionMap.forEach((map) => {
       map.resolution.forEach((res) => allResolutions.add(res));
@@ -759,13 +758,6 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
     resolutions = Array.from(allResolutions).map((res) => ({
       label: res,
       value: res,
-    }));
-  }else
-  if (modelConfig.aspectRatio.length > 0) {
-    resolutionLabel = "画面比例";
-    resolutions = modelConfig.aspectRatio.map((ratio) => ({
-      label: ratio === "16:9" ? "16:9 横屏" : ratio === "9:16" ? "9:16 竖屏" : ratio,
-      value: ratio,
     }));
   }
 
@@ -795,7 +787,7 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
   // 根据 type 确定 maxImages
   let maxImages = 1;
   if (modelConfig.type.includes("multiImage")) {
-    maxImages = 4;
+    maxImages = 9;
   } else if (modelConfig.type.includes("startEndRequired") || modelConfig.type.includes("endFrameOptional")) {
     maxImages = 2;
   }
@@ -817,10 +809,10 @@ export function getModelBasedConfig(modelConfig: ModelConfig): ManufacturerConfi
 
 // 获取厂商配置（优先使用新的模型配置系统）
 export function getManufacturerConfig(manufacturer: string, model?: string): ManufacturerConfig {
-  console.log("%c Line:818 🥚 model", "background:#3f7cff", model);
   // 如果提供了 model，尝试从 modelList 获取配置
   if (model) {
-    const modelConfig = getModelConfig(model);
+    const modelConfig = getModelConfig(model, manufacturer);
+
     if (modelConfig) {
       return getModelBasedConfig(modelConfig);
     }
@@ -892,4 +884,24 @@ export function getDurationTip(manufacturer: string, model?: string): string {
 // 获取最大图片数（支持模型参数）
 export function getMaxImages(manufacturer: string, model?: string): number {
   return getManufacturerConfig(manufacturer, model).maxImages;
+}
+
+// 获取模型是否支持音频（支持模型参数）
+export function getAudioSupport(manufacturer: string, model?: string): boolean {
+  // other 厂商默认支持音频
+  if (manufacturer === "other") {
+    return true;
+  }
+
+  // 如果提供了 model，从 modelList 获取配置
+  if (model) {
+    const modelConfig = getModelConfig(model, manufacturer);
+    if (modelConfig) {
+      return modelConfig.audio;
+    }
+  }
+
+  // 检查该厂商是否有任何模型支持音频
+  const manufacturerModels = modelList.filter((m) => m.manufacturer === manufacturer);
+  return manufacturerModels.some((m) => m.audio);
 }

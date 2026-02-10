@@ -76,7 +76,6 @@ onMounted(() => {
   resSvg();
 });
 const handleFinish = (values) => {
-  console.log("%c Line:70 🥥 values", "background:#6ec1c2", values);
   state.value.loginLoading = true;
   const obj = { ...values };
   axios

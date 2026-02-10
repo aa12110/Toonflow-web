@@ -47,7 +47,12 @@
             <!-- 成功状态 -->
             <template v-if="result.state === 1">
               <div class="video-cover" @click.stop="playVideo(result)">
-                <img :src="result.firstFrame || result.filePath" alt="视频封面" />
+                <img v-if="result.firstFrame" :src="result.firstFrame" alt="视频封面" />
+                <video v-else-if="result.filePath" :src="result.filePath" preload="metadata"></video>
+                <div v-else class="video-placeholder">
+                  <i-film :size="32" />
+                  <span>视频</span>
+                </div>
                 <div class="play-overlay">
                   <i-play-one theme="filled" :size="24" fill="#fff" />
                 </div>
@@ -131,7 +136,6 @@ const editableConfig = ref<VideoConfigData | null>(null);
 // 当前配置
 const config = computed(() => {
   if (!props.configId) return null;
-  console.log("%c Line:136 🥟 props.configId", "background:#93c0a4", props.configId);
 
   return videoConfigs.value.find((c) => c.id === props.configId) || null;
 });
@@ -159,6 +163,7 @@ watch(
         resolution: newConfig.resolution,
         duration: newConfig.duration,
         prompt: newConfig.prompt,
+        audioEnabled: newConfig.audioEnabled,
       };
     } else {
       editableConfig.value = null;
@@ -182,6 +187,8 @@ async function handleConfigFormChange(updatedConfig: VideoConfigData) {
     startFrame: updatedConfig.startFrame,
     endFrame: updatedConfig.endFrame,
     images: updatedConfig.images,
+    mode: updatedConfig.mode,
+    audioEnabled: updatedConfig.audioEnabled,
   });
 
   // 调用后端接口更新配置
@@ -194,6 +201,7 @@ async function handleConfigFormChange(updatedConfig: VideoConfigData) {
       startFrame: updatedConfig.startFrame,
       endFrame: updatedConfig.endFrame,
       images: updatedConfig.images,
+      audioEnabled: updatedConfig.audioEnabled,
     });
   } catch (error: any) {
     console.error("更新配置失败:", error);
@@ -341,10 +349,28 @@ watch(videoPlayerVisible, (visible) => {
           height: 140px;
           overflow: hidden;
 
-          img {
+          img,
+          video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+          }
+
+          .video-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: #9333ea;
+
+            span {
+              font-size: 13px;
+              font-weight: 500;
+            }
           }
 
           .play-overlay {

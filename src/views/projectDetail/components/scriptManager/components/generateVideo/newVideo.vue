@@ -168,6 +168,12 @@
                   <span class="tip">{{ getDurationTip(config.manufacturer, config.model) }}</span>
                 </template>
               </div>
+              <!-- 声音开关 -->
+              <div class="formRow" v-if="getAudioSupport(config.manufacturer, config.model)">
+                <label>声音</label>
+                <a-switch v-model:checked="config.audioEnabled" size="small" />
+                <span class="tip" style="margin-left: 8px">{{ config.audioEnabled ? "开启" : "关闭" }}</span>
+              </div>
               <!-- 视频提示词 -->
               <div class="formRow promptRow">
                 <label>提示词</label>
@@ -241,6 +247,7 @@ import {
   getDurationRange,
   getDurationTip,
   getMaxImages,
+  getAudioSupport,
 } from "@/components/videoConfig";
 
 const storeInstance = store();
@@ -260,6 +267,7 @@ interface VideoConfig {
   duration: number;
   prompt: string;
   promptLoading: boolean;
+  audioEnabled: boolean;
 }
 interface Storyboard {
   id: number;
@@ -294,7 +302,7 @@ onMounted(async () => {
     userId: Number(localStorage.getItem("userId")),
   });
   manufacturerList.value = res.data;
-  console.log("%c Line:295 🍇 manufacturerList.value", "background:#6ec1c2", manufacturerList.value);
+
   allManufacturerDisable.value = manufacturerList.value.length === 0;
 });
 watch(storyboardShow, (v) => {
@@ -305,12 +313,15 @@ watch(storyboardShow, (v) => {
 
 function addVideoConfig() {
   const defaultManufacturer: string = availableManufacturers.value[0]?.manufacturer || "volcengine";
-  const defaultModel: string = availableManufacturers.value[0] ? manufacturerList.value.find(i => i.id === availableManufacturers.value[0].value)?.model || "" : "";
+  const defaultModel: string = availableManufacturers.value[0]
+    ? manufacturerList.value.find((i) => i.id === availableManufacturers.value[0].value)?.model || ""
+    : "";
+
   const newConfig: VideoConfig = {
     id: ++configIdCounter,
     configId: undefined,
     manufacturer: "",
-    model: "",
+    model: defaultModel,
     mode: getDefaultMode(defaultManufacturer, defaultModel) as VideoConfig["mode"],
     startFrame: null,
     endFrame: null,
@@ -319,6 +330,7 @@ function addVideoConfig() {
     duration: getDefaultDuration(defaultManufacturer, defaultModel),
     prompt: "",
     promptLoading: false,
+    audioEnabled: false,
   };
   videoConfigs.value.push(newConfig);
 }
@@ -465,7 +477,6 @@ async function generateConfigPrompt(config: VideoConfig) {
     config.prompt = res.data;
     message.success("提示词生成成功");
   } catch (e: any) {
-    console.log("%c Line:463 🌽 e", "background:#e41a6a", e);
     message.error(e?.message || "生成失败");
   } finally {
     config.promptLoading = false;
@@ -512,6 +523,7 @@ async function handleOk() {
         resolution: config.resolution,
         duration: config.duration,
         prompt: config.prompt,
+        audioEnabled: config.audioEnabled,
       });
 
       // 将后端返回的配置添加到 store
