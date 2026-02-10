@@ -836,8 +836,8 @@ function sure() {
 
   .card-header {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
+    flex-wrap: wrap;
     margin-bottom: 8px;
     gap: 8px;
 
@@ -847,8 +847,6 @@ function sure() {
       font-weight: 600;
       color: #262626;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       flex: 1;
     }
 
