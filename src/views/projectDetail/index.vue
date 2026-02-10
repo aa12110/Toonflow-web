@@ -65,8 +65,8 @@ const subNavItems = [
   { id: "overview" as SubView, label: "项目概览", icon: "i-more-app" },
   { id: "originalText" as SubView, label: "小说原文", icon: "i-file-text" },
   { id: "outline" as SubView, label: "大纲管理", icon: "i-mindmap-list" },
-  { id: "assets" as SubView, label: "资产管理", icon: "i-data-file" },
   { id: "script" as SubView, label: "剧本管理", icon: "i-ad-product" },
+  { id: "assets" as SubView, label: "资产管理", icon: "i-data-file" },
 ];
 
 const currentSubView = ref<SubView>("overview");

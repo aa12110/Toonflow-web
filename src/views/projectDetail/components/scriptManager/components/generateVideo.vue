@@ -6,6 +6,7 @@
         <div class="icon-wrapper">
           <i-pic :size="20" class="icon" />
         </div>
+        {{ currentConfigId }}
         <span>视频配置</span>
         <span v-if="currentConfigs.length" class="count">{{ currentConfigs.length }}</span>
       </div>
@@ -165,6 +166,7 @@ function getResultCount(configId: number): number {
 
 // 打开详情弹窗
 function openDetail(config: VideoConfig) {
+  console.log("%c Line:169 🥖 config", "background:#b03734", config);
   currentConfigId.value = config.id;
   detailModalShow.value = true;
 }

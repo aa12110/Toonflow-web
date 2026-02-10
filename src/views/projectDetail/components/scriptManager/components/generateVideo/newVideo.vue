@@ -114,6 +114,7 @@
                 </div>
                 <div class="formRow">
                   <label></label>
+                  {{ getMaxImages(config.manufacturer, config.model) }}
                   <span class="tip">拖拽调整顺序 | {{ config.images?.length || 0 }}/{{ getMaxImages(config.manufacturer, config.model) }}张</span>
                 </div>
               </template>

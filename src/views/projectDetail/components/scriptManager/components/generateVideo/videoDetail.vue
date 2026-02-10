@@ -136,6 +136,12 @@ const editableConfig = ref<VideoConfigData | null>(null);
 // 当前配置
 const config = computed(() => {
   if (!props.configId) return null;
+  console.log("%c Line:139 🍐 props.configId", "background:#2eafb0", props.configId);
+  console.log(
+    "%c Line:142 🍩 videoConfigs.value.find((c) => c.id === props.configId)",
+    "background:#465975",
+    videoConfigs.value.find((c) => c.id === props.configId),
+  );
 
   return videoConfigs.value.find((c) => c.id === props.configId) || null;
 });
@@ -151,6 +157,7 @@ watch(
   config,
   (newConfig) => {
     if (newConfig) {
+      console.log("%c Line:160 🍺 newConfig", "background:#ffdd4d", newConfig);
       editableConfig.value = {
         id: newConfig.id,
         manufacturer: newConfig.manufacturer,

@@ -419,11 +419,13 @@ onMounted(async () => {
     localConfig.aiConfigId = undefined;
     selectManfactDis.value = false;
   } else {
+    console.log("%c Line:425 🌶 localConfig", "background:#f5ce50", localConfig);
+
     // 如果已有 model，确保 manufacturer 和其他配置正确
-    const selectedManufacturer = manufacturerList.value.find((i) => i.model === localConfig.model);
+    const selectedManufacturer = manufacturerList.value.find((i) => i.manufacturer === localConfig.manufacturer);
+    console.log("%c Line:427 🍞 selectedManufacturer", "background:#6ec1c2", selectedManufacturer);
     if (selectedManufacturer) {
       localConfig.aiConfigId = selectedManufacturer.id;
-      localConfig.manufacturer = selectedManufacturer.manufacturer;
     }
   }
 });

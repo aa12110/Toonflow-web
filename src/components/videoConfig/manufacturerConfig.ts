@@ -101,9 +101,9 @@ export const modelList: ModelConfig[] = [
   {
     manufacturer: "other",
     model: "",
-    durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12], resolution: ["480p", "720p", "1080p"] }],
+    durationResolutionMap: [{ duration: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], resolution: ["480p", "720p", "1080p"] }],
     aspectRatio: ["16:9", "4:3", "1:1", "3:4", "9:16", "21:9"],
-    type: ["text", "endFrameOptional"],
+    type: ["text", "endFrameOptional", "singleImage", "multiImage"],
     audio: true,
   },
   // ================== 火山引擎/豆包系列 ==================
@@ -819,6 +819,7 @@ export function getManufacturerConfig(manufacturer: string, model?: string): Man
   }
 
   // 回退到旧的静态配置
+
   return manufacturerConfigs[manufacturer] || manufacturerConfigs.volcengine;
 }
 
@@ -834,6 +835,15 @@ export function getModeLabel(mode: string): string {
 
 // 获取模式选项（支持模型参数）
 export function getModeOptions(manufacturer: string, model?: string) {
+  // 如果是 "other" 厂商，返回所有模式
+  if (manufacturer === "other") {
+    return [
+      { label: modeLabels["text"], value: "text" },
+      { label: modeLabels["single"], value: "single" },
+      { label: modeLabels["startEnd"], value: "startEnd" },
+      { label: modeLabels["multi"], value: "multi" },
+    ];
+  }
   return getManufacturerConfig(manufacturer, model).modes;
 }
 

@@ -699,7 +699,7 @@ async function keep() {
     }
   } else {
     try {
-      await axios.post("/setting/updeteModel", {
+      await axios.post("/setting/updateModel", {
         id: modelForm.value.id,
         type,
         modelType: modelForm.value.modelType,

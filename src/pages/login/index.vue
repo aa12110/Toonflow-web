@@ -15,7 +15,7 @@
           </a-input>
         </a-form-item>
         <a-form-item name="password">
-          <a-input-password v-model:value="state.user.password" placeholder="请输入密码" autocomplete="current-password" size="large">
+          <a-input-password v-model:value="state.user.password" placeholder="请输入密码" size="large">
             <template #prefix>
               <i-lock theme="outline" class="input-icon" />
             </template>
