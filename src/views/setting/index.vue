@@ -68,19 +68,8 @@
                     {{ getManufacturerName(video.manufacturer) }}
                   </a-tag>
                 </div>
-                <a-popconfirm 
-                  title="确定要删除此视频模型吗？" 
-                  ok-text="确定" 
-                  cancel-text="取消" 
-                  @confirm="deleteVideoModel(video.id)"
-                  @click.stop
-                >
-                  <a-button 
-                    danger 
-                    size="small" 
-                    class="delete-btn-corner"
-                    @click.stop
-                  >
+                <a-popconfirm title="确定要删除此视频模型吗？" ok-text="确定" cancel-text="取消" @confirm="deleteVideoModel(video.id)" @click.stop>
+                  <a-button danger size="small" class="delete-btn-corner" @click.stop>
                     <i-delete theme="outline" size="14" fill="currentColor" />
                   </a-button>
                 </a-popconfirm>

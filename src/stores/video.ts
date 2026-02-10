@@ -38,6 +38,7 @@ export interface VideoResult {
   duration: number;
   prompt: string;
   createdAt: string;
+  errorReason?: string;
 }
 
 export default defineStore(
@@ -109,6 +110,7 @@ export default defineStore(
                 filePath: updated.filePath || r.filePath,
                 firstFrame: updated.firstFrame || r.firstFrame,
                 duration: updated.duration || r.duration,
+                errorReason: updated.errorReason || r.errorReason,
               };
             }
             return r;
@@ -142,6 +144,7 @@ export default defineStore(
         duration: item.duration || item.time || 0,
         prompt: item.prompt || "",
         createdAt: new Date().toISOString(),
+        errorReason: item.errorReason || "",
       }));
 
       // 按ID升序排序，新的在后面

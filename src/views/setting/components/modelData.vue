@@ -20,9 +20,19 @@
               新增模型
             </a-button>
           </div>
+          <div class="toolbar-center">
+            <a-input v-model:value="searchKeyword" placeholder="搜索模型名称..." size="large" allow-clear class="search-input">
+              <template #prefix>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="#8c8c8c">
+                  <path
+                    d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                </svg>
+              </template>
+            </a-input>
+          </div>
           <div class="toolbar-right">
-            <a-badge :count="tableData.length" :number-style="{ backgroundColor: '#52c41a' }">
-              <div class="model-count">共 {{ tableData.length }} 个模型</div>
+            <a-badge :count="filteredTableData.length" :number-style="{ backgroundColor: '#52c41a' }">
+              <div class="model-count">共 {{ filteredTableData.length }} 个模型</div>
             </a-badge>
           </div>
         </div>
@@ -30,7 +40,7 @@
         <div class="table-wrapper">
           <vxe-table
             ref="tableRef"
-            :data="tableData"
+            :data="filteredTableData"
             :radio-config="{ highlight: true, checkMethod: checkRadioMethod, trigger: 'row' }"
             :row-config="{ isHover: true }"
             stripe
@@ -255,6 +265,18 @@ const tableRef = ref();
 const state = ref("");
 const modelShow = ref(false);
 const tableData = ref<RowData[]>([]);
+const searchKeyword = ref("");
+
+// 根据搜索关键词过滤表格数据
+const filteredTableData = computed(() => {
+  if (!searchKeyword.value) {
+    return tableData.value;
+  }
+  const keyword = searchKeyword.value.toLowerCase().trim();
+  return tableData.value.filter((item) => {
+    return item.model.toLowerCase().includes(keyword);
+  });
+});
 //模型表单数据
 const modelForm = ref<RowData>({
   id: 0,
@@ -614,6 +636,40 @@ async function confirmConfig() {
 
       svg {
         margin-right: 6px;
+      }
+    }
+  }
+
+  .toolbar-center {
+    flex: 1;
+    max-width: 400px;
+    margin: 0 24px;
+
+    .search-input {
+      width: 100%;
+      height: 40px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+
+      :deep(.ant-input) {
+        font-size: 14px;
+        border-radius: 8px;
+      }
+
+      :deep(.ant-input-affix-wrapper) {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+
+        &:hover {
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        &:focus,
+        &.ant-input-affix-wrapper-focused {
+          box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+          border-color: #40a9ff;
+        }
       }
     }
   }

@@ -434,8 +434,6 @@ function filterModels(models: ModelCard[]): ModelCard[] {
 
   // 搜索关键词筛选
   if (searchKeyword.value.trim()) {
-    console.log("%c Line:512 🍧 searchKeyword.value", "background:#ed9ec7", searchKeyword.value);
-
     const keyword = searchKeyword.value.toLowerCase().trim();
     filtered = filtered.filter(
       (model) =>
