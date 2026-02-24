@@ -430,15 +430,15 @@ async function testAi(row: RowData) {
   const { model, apiKey, baseUrl, manufacturer } = row;
 
   if (!model) {
-    message.warning("请先填写模型名称");
+    ElMessage.warning("请先填写模型名称");
     return;
   }
   if (!apiKey) {
-    message.warning("请先填写 API Key");
+    ElMessage.warning("请先填写 API Key");
     return;
   }
   if (!manufacturer) {
-    message.warning("请先选择厂商");
+    ElMessage.warning("请先选择厂商");
     return;
   }
   row.load = true;
@@ -454,7 +454,7 @@ async function testAi(row: RowData) {
     }
     if (!queryUrl) {
       row.load = false;
-      return message.warning("type 错误");
+      return ElMessage.warning("type 错误");
     }
     const res = await axios.post(queryUrl, {
       modelName: model,
@@ -482,7 +482,7 @@ async function testAi(row: RowData) {
       }
     }
   } catch (e: any) {
-    message.error(`连接失败: ${e.message}`);
+    ElMessage.error(`连接失败: ${e.message}`);
   } finally {
     row.load = false;
   }
@@ -512,12 +512,12 @@ function delModelBtn(row: RowData) {
   axios
     .post("/setting/delModel", { id: row.id })
     .then(() => {
-      message.success("模型删除成功");
+      ElMessage.success("模型删除成功");
       fetchModelList();
       emit("modelList");
     })
     .catch(() => {
-      message.error("模型删除失败");
+      ElMessage.error("模型删除失败");
     });
 }
 const emit = defineEmits(["modelList"]);
@@ -525,7 +525,7 @@ const emit = defineEmits(["modelList"]);
 async function confirmConfig() {
   const selectedRow = tableRef.value?.getRadioRecord();
   if (!selectedRow) {
-    message.warning("请先选择一个模型");
+    ElMessage.warning("请先选择一个模型");
     return;
   }
   try {
@@ -534,12 +534,12 @@ async function confirmConfig() {
       configId: selectedRow.id,
     });
 
-    message.success("配置成功");
+    ElMessage.success("配置成功");
     tableRef.value?.clearRadioRow();
     modelDataShow.value = false;
     emit("modelList");
   } catch {
-    message.error("配置失败，请重试");
+    ElMessage.error("配置失败，请重试");
   }
 }
 </script>
