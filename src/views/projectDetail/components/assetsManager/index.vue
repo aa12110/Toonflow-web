@@ -214,7 +214,8 @@ import addElementDialog from "./components/addElementDialog.vue";
 import batchGenereate from "./components/batchGenereate.vue";
 import generateImage from "./components/generateImage.vue";
 import store from "@/stores";
-
+import settingStore from "@/stores/setting";
+const { otherSetting } = storeToRefs(settingStore());
 const { projectId, currentScriptId } = storeToRefs(store());
 
 interface ElementData {
@@ -370,7 +371,8 @@ function deleteFrom(row: ElementData) {
   });
 }
 
-async function processBatch<T>(list: T[], handler: (item: T) => Promise<void>, batchSize = 5) {
+async function processBatch<T>(list: T[], handler: (item: T) => Promise<void>) {
+  const batchSize = otherSetting.value.assetsBatchGenereateSize || 5; // 从设置中获取批量生成的大小，默认为5
   for (let i = 0; i < list.length; i += batchSize) {
     await Promise.all(list.slice(i, i + batchSize).map(handler));
   }
