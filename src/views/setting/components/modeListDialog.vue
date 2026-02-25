@@ -162,6 +162,7 @@ const manufacturerNames: Record<string, string> = {
   anthropic: "Anthropic",
   runninghub: "RunningHUB",
   gemini: "Gemini",
+  modelScope: "魔塔",
   other: "其他",
 };
 
@@ -179,6 +180,7 @@ function getManufacturerColor(manufacturer: string): string {
     anthropic: "volcano",
     runninghub: "gold",
     gemini: "lime",
+    modelScope: "#634BFE",
     other: "default",
   };
   return colors[manufacturer] || "default";
@@ -244,6 +246,11 @@ const manufacturerDefaultBaseUrls: Record<string, Record<string, string>> = {
     image: "",
     video: "",
   },
+  modelScope: {
+    text: "https://api-inference.modelscope.cn/v1",
+    image: "https://api-inference.modelscope.cn/v1/images/generations|https://api-inference.modelscope.cn/v1/tasks/{id}",
+    video: "",
+  },
   other: {
     text: "",
     image: "",
@@ -300,6 +307,7 @@ const textModelPresets = {
     { label: "doubao-pro-4-chat", value: "doubao-pro-4-chat" },
     { label: "doubao-seed-1-8-251228", value: "doubao-seed-1-8-251228" },
     { label: "doubao-seed-1-6-251015", value: "doubao-seed-1-6-251015" },
+    { label: "doubao-seed-2-0-pro-260215", value: "doubao-seed-2-0-pro-260215" },
   ],
   zhipu: [
     { label: "glm-4.7", value: "glm-4.7" },
@@ -345,6 +353,7 @@ const textModelPresets = {
     { label: "claude-3-7-sonnet-latest", value: "claude-3-7-sonnet-latest" },
     { label: "claude-3-5-haiku-latest", value: "claude-3-5-haiku-latest" },
   ],
+  modelScope: [{ label: "自定义", value: "自定义" }],
 };
 
 // 生成文本模型卡片列表
@@ -455,6 +464,7 @@ const imageModelPresets = {
   ],
   vidu: [{ label: "viduq2", value: "viduq2" }],
   runninghub: [{ label: "nanobanana", value: "nanobanana" }],
+  modelScope: [{ label: "自定义", value: "自定义" }],
   // apimart: [
   //   { label: "nanobanana", value: "nanobanana" },
   // ],
