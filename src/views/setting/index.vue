@@ -88,6 +88,35 @@
         </template>
       </a-empty>
     </div>
+    <!-- 访问控制 -->
+    <div class="settingCard">
+      <div class="cardHeader">
+        <div class="cardIcon blue">
+          <i-lock theme="outline" size="20" fill="currentColor" />
+        </div>
+        <span class="cardTitle">访问控制</span>
+      </div>
+      <div class="cardContent">
+        <div class="formGrid">
+          <div class="formItem">
+            <label class="formLabel">访问账号</label>
+            <a-input v-model:value="settingData.name" placeholder="请输入访问账号" class="formInput" />
+          </div>
+          <div class="formItem">
+            <label class="formLabel">访问密码</label>
+            <a-input-password v-model:value="settingData.password" placeholder="请输入访问密码" class="formInput" />
+          </div>
+        </div>
+        <div style="margin-top: 20px; display: flex; justify-content: flex-end">
+          <a-button type="primary" @click="saveAccessControl" :loading="savingAccess">
+            <div class="c">
+              <i-check theme="outline" size="14" fill="currentColor" />
+              保存设置
+            </div>
+          </a-button>
+        </div>
+      </div>
+    </div>
     <div class="other">
       <h1 class="otherConfiguration">其他配置</h1>
       <div class="prompt">
@@ -201,6 +230,7 @@
         </a-card>
       </div>
     </div>
+
     <PromptEditor v-model="promptEditorShow" />
     <newModelData v-model:modelDataShow="modelDataShow" :currentType="currentType" v-model:configingModel="configingModel" @modelList="modelList" />
     <ModeListDialog :typeList="['video']" v-model:modelShow="videoModelDialogShow" state="选择视频模型" @fetchModelList="onVideoModelDialogClose" />
@@ -236,7 +266,29 @@ interface VideoModelType {
   createTime: number;
   type: string;
 }
+interface ModelDataType {
+  model: string;
+  apiKey: string;
+  baseURL: string;
+  manufacturer: string;
+}
 
+interface SettingType {
+  id?: number | null;
+  name?: string;
+  password?: string;
+}
+const customFormat: ModelDataType = {
+  model: "",
+  apiKey: "",
+  baseURL: "",
+  manufacturer: "openAi",
+};
+const settingData = ref<SettingType>({
+  id: null,
+  name: "",
+  password: "",
+});
 const modelData = ref<ModelType[]>([]);
 const videoModels = ref<VideoModelType[]>([]);
 const currentType = ref("");
@@ -252,9 +304,12 @@ const editingVideoModel = ref<VideoModelType | null>({
   type: "video",
 });
 const editDialogVisible = ref(false);
+const savingAccess = ref(false);
+
 onMounted(() => {
   modelList();
   loadVideoModels();
+  loadAccessControl();
 });
 
 async function modelList() {
@@ -274,6 +329,34 @@ async function loadVideoModels() {
   } catch (error) {
     console.error("加载视频模型列表失败", error);
     videoModels.value = [];
+  }
+}
+
+// 加载访问控制设置
+async function loadAccessControl() {
+  axios.get("/user/getUser").then((res) => {
+    settingData.value.id = res.data.id ?? null;
+    settingData.value.name = res.data.name ?? "";
+    settingData.value.password = res.data.password ?? "";
+  });
+}
+
+// 保存访问控制设置
+async function saveAccessControl() {
+  if (!settingData.value.name || !settingData.value.password) {
+    message.warning("请填写完整的账号和密码");
+    return;
+  }
+
+  savingAccess.value = true;
+  try {
+    await axios.post("/user/saveUser", settingData.value);
+    message.success("保存成功");
+    loadAccessControl();
+  } catch (error) {
+    message.error("保存失败");
+  } finally {
+    savingAccess.value = false;
   }
 }
 
@@ -911,5 +994,134 @@ function openLicense() {
       }
     }
   }
+}
+/* 卡片通用样式 */
+.settingCard {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #f3e8ff;
+  margin-bottom: 20px;
+  transition: all 0.2s;
+  margin-top: 40px;
+  padding: 24px;
+}
+
+.settingCard:hover {
+  box-shadow: 0 4px 16px rgba(152, 16, 250, 0.08);
+}
+
+.settingCard.danger {
+  border-color: #fee2e2;
+}
+
+.settingCard.danger:hover {
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.08);
+}
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f9fafb;
+}
+.cardIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.cardIcon.purple {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  color: var(--mainColor);
+}
+
+.cardIcon.blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #3b82f6;
+}
+
+.cardIcon.green {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #22c55e;
+}
+
+.cardIcon.orange {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  color: #f97316;
+}
+
+.cardIcon.red {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #ef4444;
+}
+
+.cardIcon.cyan {
+  background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
+  color: #06b6d4;
+}
+
+.cardContent {
+  padding: 24px;
+}
+/* 表单样式 */
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.formItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modelForm .formItem + .formItem {
+  margin-top: 16px;
+}
+
+.formLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.formHint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+.formError {
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 4px;
+}
+.formInput {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.formInput:hover {
+  border-color: #d1d5db;
+}
+
+.formInput:focus,
+.formInput:focus-within {
+  border-color: var(--mainColor);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(152, 16, 250, 0.1);
 }
 </style>

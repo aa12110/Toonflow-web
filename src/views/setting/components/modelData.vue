@@ -194,7 +194,7 @@
           <svg viewBox="0 0 24 24" width="24" height="24" fill="#52c41a" style="margin-right: 8px">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
           </svg>
-          <span>图像生成测试成功</span>
+          <span style="color: #000">图像生成测试成功</span>
         </div>
       </template>
       <div class="test-result-content">
@@ -203,7 +203,7 @@
           图像模型配置正确，以下是生成的测试图片：
         </p>
         <div class="test-image-wrapper">
-          <a-image :src="testImageResult" :preview="{ src: testImageResult }" class="test-image-preview" />
+          <el-image :src="testImageResult" :preview="{ src: testImageResult }" :preview-src-list="[testImageResult]" class="test-image-preview" />
         </div>
       </div>
     </el-dialog>
