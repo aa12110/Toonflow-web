@@ -4,6 +4,9 @@
     <skeleton title="主题" divider>
       <themeConfig />
     </skeleton>
+    <skeleton title="请求地址配置" divider>
+      <requestConfig />
+    </skeleton>
     <skeleton title="登录配置" divider>
       <loginConfig />
     </skeleton>
@@ -25,12 +28,16 @@
     <skeleton title="关于" divider>
       <about />
     </skeleton>
+    <skeleton title="退出登录" divider>
+      <logoutConfig />
+    </skeleton>
   </div>
 </template>
 
 <script setup lang="ts">
 import skeleton from "./skeleton.vue";
 import themeConfig from "./components/themeConfig.vue";
+import requestConfig from "./components/requestConfig.vue";
 import loginConfig from "./components/loginConfig.vue";
 import aiConfog from "./components/aiConfog.vue";
 import videoModelConfig from "./components/videoModelConfig.vue";
@@ -38,6 +45,7 @@ import promptsEdit from "./components/promptsEdit.vue";
 import dbConfig from "./components/dbConfig.vue";
 import otherConfig from "./components/otherConfig.vue";
 import about from "./components/about.vue";
+import logoutConfig from "./components/logoutConfig.vue";
 </script>
 
 <style lang="scss" scoped>

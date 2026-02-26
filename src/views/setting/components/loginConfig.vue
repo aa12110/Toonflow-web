@@ -1,6 +1,6 @@
 <template>
   <div v-loading="loading">
-    <t-form ref="formRef" :data="formData" :rules="formRules" :colon="true" @submit="handleSubmit" @reset="handleReset">
+    <t-form ref="formRef" labelAlign="top" :data="formData" :rules="formRules" :colon="true" @submit="handleSubmit" @reset="handleReset">
       <t-form-item label="用户名" name="name">
         <t-input v-model="formData.name" placeholder="请输入用户名" clearable width="100%" />
       </t-form-item>

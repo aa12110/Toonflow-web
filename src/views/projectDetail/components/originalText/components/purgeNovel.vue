@@ -30,7 +30,7 @@
                 <t-textarea
                   v-model="content"
                   placeholder="请输入小说原文内容"
-                  :autosize="{ minRows: 18, maxRows: 18 }" />
+                  :autosize="{ minRows: 12, maxRows: 12 }" />
               </div>
               <div class="footerInfo f ac jb" style="margin-top: 8px">
                 <div>
