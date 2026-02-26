@@ -123,6 +123,9 @@
                         <span>生成中...</span>
                       </div>
                     </template>
+                    <template v-else-if="item.state === '生成失败'">
+                      <div class="errorPlaceholder">生成失败</div>
+                    </template>
                     <template v-else>
                       <div class="errorPlaceholder">未知状态</div>
                     </template>

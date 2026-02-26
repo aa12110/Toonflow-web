@@ -353,7 +353,7 @@ const textModelPresets = {
     { label: "claude-3-7-sonnet-latest", value: "claude-3-7-sonnet-latest" },
     { label: "claude-3-5-haiku-latest", value: "claude-3-5-haiku-latest" },
   ],
-  modelScope: [{ label: "自定义", value: "自定义" }],
+  modelScope: [{ label: "自定义模型", value: "自定义模型" }],
 };
 
 // 生成文本模型卡片列表
@@ -464,7 +464,7 @@ const imageModelPresets = {
   ],
   vidu: [{ label: "viduq2", value: "viduq2" }],
   runninghub: [{ label: "nanobanana", value: "nanobanana" }],
-  modelScope: [{ label: "自定义", value: "自定义" }],
+  modelScope: [{ label: "自定义模型", value: "自定义模型" }],
   // apimart: [
   //   { label: "nanobanana", value: "nanobanana" },
   // ],
