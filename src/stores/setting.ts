@@ -11,7 +11,7 @@ export default defineStore(
 
     const themeSetting = ref({
       mode: "light" as "light" | "dark" | "auto",
-      primaryColor: "#0052D9",
+      primaryColor: "#9810fa",
     });
 
     return { baseUrl, wsBaseUrl, otherSetting, themeSetting };

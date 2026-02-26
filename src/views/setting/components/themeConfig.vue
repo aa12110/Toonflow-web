@@ -106,7 +106,20 @@ const toggleThemeWithTransition = (event: MouseEvent | undefined, callback: () =
 // 应用主题模式
 const applyThemeMode = (mode: string) => {
   const targetMode = mode === "auto" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : mode;
-  document.documentElement.setAttribute("theme-mode", targetMode);
+  
+  // 方式 1：使用 theme-mode 属性
+  if (targetMode === "dark") {
+    document.documentElement.setAttribute("theme-mode", "dark");
+  } else {
+    document.documentElement.removeAttribute("theme-mode");
+  }
+  
+  // 方式 2：使用 dark 类名
+  if (targetMode === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
 };
 
 // 处理主题色变更
@@ -194,7 +207,22 @@ const applyThemeColor = (color: string) => {
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
   if (themeSetting.value.mode === "auto") {
     toggleThemeWithTransition(undefined, () => {
-      document.documentElement.setAttribute("theme-mode", e.matches ? "dark" : "light");
+      const targetMode = e.matches ? "dark" : "light";
+      
+      // 方式 1：使用 theme-mode 属性
+      if (targetMode === "dark") {
+        document.documentElement.setAttribute("theme-mode", "dark");
+      } else {
+        document.documentElement.removeAttribute("theme-mode");
+      }
+      
+      // 方式 2：使用 dark 类名
+      if (targetMode === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      
       applyThemeColor(themeSetting.value.primaryColor);
     });
   }

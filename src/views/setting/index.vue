@@ -1,7 +1,7 @@
 <template>
   <div class="setting">
     <h1>设置</h1>
-     <skeleton title="主题" divider>
+    <skeleton title="主题" divider>
       <themeConfig />
     </skeleton>
     <skeleton title="登录配置" divider>
