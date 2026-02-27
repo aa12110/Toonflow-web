@@ -1,8 +1,8 @@
 <template>
-  <el-dialog v-model="modelShow" :title="props.state" top="1vh" :footer="null" width="70vw">
+  <el-dialog v-model="modelShow" :title="props.state" top="1vh" :footer="null" width="70vw" @open="getData">
     <div class="addModelContainer">
       <div class="model-cards-container">
-        <a-tabs v-model:activeKey="activeTab" class="model-tabs">
+        <a-tabs v-model:activeKey="activeTab" class="model-tabs" @change="getData">
           <a-tab-pane v-for="tab in useTabList" :key="tab.key" :tab="tab.tab">
             <div class="filter-section">
               <div class="search-wrapper">
@@ -96,6 +96,7 @@ import { ref, computed, watch } from "vue";
 import { message, Empty } from "ant-design-vue";
 import { SearchOutlined, FilterOutlined, PlusOutlined } from "@ant-design/icons-vue";
 import addModelDialog from "./addModelDialog.vue";
+import axios from "@/utils/axios";
 
 const props = defineProps({
   state: {
@@ -163,6 +164,7 @@ const manufacturerNames: Record<string, string> = {
   runninghub: "RunningHUB",
   gemini: "Gemini",
   modelScope: "魔塔",
+  xai: "XAI",
   other: "其他",
 };
 
@@ -181,6 +183,7 @@ function getManufacturerColor(manufacturer: string): string {
     runninghub: "gold",
     gemini: "lime",
     modelScope: "#634BFE",
+    xai: "red",
     other: "default",
   };
   return colors[manufacturer] || "default";
@@ -297,69 +300,69 @@ interface RowData {
 }
 
 //文本模型预设
-const textModelPresets = {
-  deepSeek: [
-    { label: "deepseek-chat", value: "deepseek-chat" },
-    { label: "deepseek-reasoner", value: "deepseek-reasoner" },
-  ],
-  volcengine: [
-    { label: "doubao-lite-4-chat", value: "doubao-lite-4-chat" },
-    { label: "doubao-pro-4-chat", value: "doubao-pro-4-chat" },
-    { label: "doubao-seed-1-8-251228", value: "doubao-seed-1-8-251228" },
-    { label: "doubao-seed-1-6-251015", value: "doubao-seed-1-6-251015" },
-    { label: "doubao-seed-2-0-pro-260215", value: "doubao-seed-2-0-pro-260215" },
-  ],
-  zhipu: [
-    { label: "glm-4.7", value: "glm-4.7" },
-    { label: "glm-4.7-flashx", value: "glm-4.7-flashx" },
-    { label: "glm-4.6", value: "glm-4.6" },
-    { label: "glm-4.5-air", value: "glm-4.5-air" },
-    { label: "glm-4.5-airx", value: "glm-4.5-airx" },
-    { label: "glm-4-long", value: "glm-4-long" },
-    { label: "glm-4.7-flash", value: "glm-4.7-flash" },
-    { label: "glm-4.5-flash", value: "glm-4.5-flash" },
-    { label: "glm-4.6v", value: "glm-4.6v" },
-  ],
-  qwen: [
-    { label: "qwen-vl-max", value: "qwen-vl-max" },
-    { label: "qwen-plus-latest", value: "qwen-plus-latest" },
-    { label: "qwen-max", value: "qwen-max" },
-    { label: "qwen2.5-72b-instruct", value: "qwen2.5-72b-instruct" },
-    { label: "qwen2.5-14b-instruct-1m", value: "qwen2.5-14b-instruct-1m" },
-    { label: "qwen2.5-vl-72b-instruct", value: "qwen2.5-vl-72b-instruct" },
-  ],
-  openai: [
-    { label: "gpt-4o", value: "gpt-4o" },
-    { label: "gpt-4o-mini", value: "gpt-4o-mini" },
-    { label: "gpt-4.1", value: "gpt-4.1" },
-    { label: "gpt-5.1", value: "gpt-5.1" },
-    { label: "gpt-5.2", value: "gpt-5.2" },
-  ],
-  gemini: [
-    { label: "gemini-2.0-flash", value: "gemini-2.0-flash" },
-    { label: "gemini-2.0-flash-lite", value: "gemini-2.0-flash-lite" },
-    { label: "gemini-1.5-pro", value: "gemini-1.5-pro" },
-    { label: "gemini-1.5-flash", value: "gemini-1.5-flash" },
-    { label: "gemini-2.5-pro", value: "gemini-2.5-pro" },
-    { label: "gemini-2.5-flash", value: "gemini-2.5-flash" },
-  ],
-  anthropic: [
-    { label: "claude-opus-4-5", value: "claude-opus-4-5" },
-    { label: "claude-haiku-4-5", value: "claude-haiku-4-5" },
-    { label: "claude-sonnet-4-5", value: "claude-sonnet-4-5" },
-    { label: "claude-opus-4-1", value: "claude-opus-4-1" },
-    { label: "claude-opus-4-0", value: "claude-opus-4-0" },
-    { label: "claude-sonnet-4-0", value: "claude-sonnet-4-0" },
-    { label: "claude-3-7-sonnet-latest", value: "claude-3-7-sonnet-latest" },
-    { label: "claude-3-5-haiku-latest", value: "claude-3-5-haiku-latest" },
-  ],
-  modelScope: [{ label: "自定义模型", value: "自定义模型" }],
-};
+const textModelPresets = ref<Record<string, { label: string; value: string }[]>>({
+  // deepSeek: [
+  //   { label: "deepseek-chat", value: "deepseek-chat" },
+  //   { label: "deepseek-reasoner", value: "deepseek-reasoner" },
+  // ],
+  // volcengine: [
+  //   { label: "doubao-lite-4-chat", value: "doubao-lite-4-chat" },
+  //   { label: "doubao-pro-4-chat", value: "doubao-pro-4-chat" },
+  //   { label: "doubao-seed-1-8-251228", value: "doubao-seed-1-8-251228" },
+  //   { label: "doubao-seed-1-6-251015", value: "doubao-seed-1-6-251015" },
+  //   { label: "doubao-seed-2-0-pro-260215", value: "doubao-seed-2-0-pro-260215" },
+  // ],
+  // zhipu: [
+  //   { label: "glm-4.7", value: "glm-4.7" },
+  //   { label: "glm-4.7-flashx", value: "glm-4.7-flashx" },
+  //   { label: "glm-4.6", value: "glm-4.6" },
+  //   { label: "glm-4.5-air", value: "glm-4.5-air" },
+  //   { label: "glm-4.5-airx", value: "glm-4.5-airx" },
+  //   { label: "glm-4-long", value: "glm-4-long" },
+  //   { label: "glm-4.7-flash", value: "glm-4.7-flash" },
+  //   { label: "glm-4.5-flash", value: "glm-4.5-flash" },
+  //   { label: "glm-4.6v", value: "glm-4.6v" },
+  // ],
+  // qwen: [
+  //   { label: "qwen-vl-max", value: "qwen-vl-max" },
+  //   { label: "qwen-plus-latest", value: "qwen-plus-latest" },
+  //   { label: "qwen-max", value: "qwen-max" },
+  //   { label: "qwen2.5-72b-instruct", value: "qwen2.5-72b-instruct" },
+  //   { label: "qwen2.5-14b-instruct-1m", value: "qwen2.5-14b-instruct-1m" },
+  //   { label: "qwen2.5-vl-72b-instruct", value: "qwen2.5-vl-72b-instruct" },
+  // ],
+  // openai: [
+  //   { label: "gpt-4o", value: "gpt-4o" },
+  //   { label: "gpt-4o-mini", value: "gpt-4o-mini" },
+  //   { label: "gpt-4.1", value: "gpt-4.1" },
+  //   { label: "gpt-5.1", value: "gpt-5.1" },
+  //   { label: "gpt-5.2", value: "gpt-5.2" },
+  // ],
+  // gemini: [
+  //   { label: "gemini-2.0-flash", value: "gemini-2.0-flash" },
+  //   { label: "gemini-2.0-flash-lite", value: "gemini-2.0-flash-lite" },
+  //   { label: "gemini-1.5-pro", value: "gemini-1.5-pro" },
+  //   { label: "gemini-1.5-flash", value: "gemini-1.5-flash" },
+  //   { label: "gemini-2.5-pro", value: "gemini-2.5-pro" },
+  //   { label: "gemini-2.5-flash", value: "gemini-2.5-flash" },
+  // ],
+  // anthropic: [
+  //   { label: "claude-opus-4-5", value: "claude-opus-4-5" },
+  //   { label: "claude-haiku-4-5", value: "claude-haiku-4-5" },
+  //   { label: "claude-sonnet-4-5", value: "claude-sonnet-4-5" },
+  //   { label: "claude-opus-4-1", value: "claude-opus-4-1" },
+  //   { label: "claude-opus-4-0", value: "claude-opus-4-0" },
+  //   { label: "claude-sonnet-4-0", value: "claude-sonnet-4-0" },
+  //   { label: "claude-3-7-sonnet-latest", value: "claude-3-7-sonnet-latest" },
+  //   { label: "claude-3-5-haiku-latest", value: "claude-3-5-haiku-latest" },
+  // ],
+  // modelScope: [{ label: "自定义模型", value: "自定义模型" }],
+});
 
 // 生成文本模型卡片列表
 const textModels = computed<ModelCard[]>(() => {
   const models: ModelCard[] = [];
-  Object.entries(textModelPresets).forEach(([manufacturer, presets]) => {
+  Object.entries(textModelPresets.value).forEach(([manufacturer, presets]) => {
     presets.forEach((preset) => {
       models.push({
         manufacturer,
@@ -449,31 +452,31 @@ watch(activeTab, () => {
   clearFilters();
 });
 //图片模型预设
-const imageModelPresets = {
-  volcengine: [{ label: "doubao-seedream-4-5-251128", value: "doubao-seedream-4-5-251128" }],
-  kling: [
-    { label: "kling-v1", value: "kling-v1" },
-    { label: "kling-v1-5", value: "kling-v1-5" },
-    { label: "kling-v2", value: "kling-v2" },
-    { label: "kling-v2-new", value: "kling-v2-new" },
-    { label: "kling-v2-1", value: "kling-v2-1" },
-  ],
-  gemini: [
-    { label: "gemini-2.5-flash-image", value: "gemini-2.5-flash-image" },
-    { label: "gemini-3-pro-image-preview", value: "gemini-3-pro-image-preview" },
-  ],
-  vidu: [{ label: "viduq2", value: "viduq2" }],
-  runninghub: [{ label: "nanobanana", value: "nanobanana" }],
-  modelScope: [{ label: "自定义模型", value: "自定义模型" }],
+const imageModelPresets = ref<Record<string, { label: string; value: string }[]>>({
+  // volcengine: [{ label: "doubao-seedream-4-5-251128", value: "doubao-seedream-4-5-251128" }],
+  // kling: [
+  //   { label: "kling-v1", value: "kling-v1" },
+  //   { label: "kling-v1-5", value: "kling-v1-5" },
+  //   { label: "kling-v2", value: "kling-v2" },
+  //   { label: "kling-v2-new", value: "kling-v2-new" },
+  //   { label: "kling-v2-1", value: "kling-v2-1" },
+  // ],
+  // gemini: [
+  //   { label: "gemini-2.5-flash-image", value: "gemini-2.5-flash-image" },
+  //   { label: "gemini-3-pro-image-preview", value: "gemini-3-pro-image-preview" },
+  // ],
+  // vidu: [{ label: "viduq2", value: "viduq2" }],
+  // runninghub: [{ label: "nanobanana", value: "nanobanana" }],
+  // modelScope: [{ label: "自定义模型", value: "自定义模型" }],
   // apimart: [
   //   { label: "nanobanana", value: "nanobanana" },
   // ],
-};
+});
 
 // 生成图像模型卡片列表
 const imageModels = computed<ModelCard[]>(() => {
   const models: ModelCard[] = [];
-  Object.entries(imageModelPresets).forEach(([manufacturer, presets]) => {
+  Object.entries(imageModelPresets.value).forEach(([manufacturer, presets]) => {
     presets.forEach((preset) => {
       models.push({
         manufacturer,
@@ -494,61 +497,61 @@ const filteredImageModels = computed<ModelCard[]>(() => {
   return filterModels(imageModels.value);
 });
 //视频模型预设
-const videoModelPresets = {
-  volcengine: [
-    { label: "doubao-seedance-1-0-pro-fast-251015", value: "doubao-seedance-1-0-pro-fast-251015" },
-    { label: "doubao-seedance-1-5-pro-251215", value: "doubao-seedance-1-5-pro-251215" },
-    { label: "doubao-seedance-1-0-pro-250528", value: "doubao-seedance-1-0-pro-250528" },
-    { label: "doubao-seedance-1-0-lite-i2v-250428", value: "doubao-seedance-1-0-lite-i2v-250428" },
-    { label: "doubao-seedance-1-0-lite-t2v-250428", value: "doubao-seedance-1-0-lite-t2v-250428" },
-  ],
-  runninghub: [
-    { label: "sora-2", value: "sora-2" },
-    { label: "sora-2-pro", value: "sora-2-pro" },
-  ],
-  kling: [
-    { label: "kling-v1(STD)", value: "kling-v1(STD)" },
-    { label: "kling-v1(PRO)", value: "kling-v1(PRO)" },
-    { label: "kling-v1-6(PRO)", value: "kling-v1-6(PRO)" },
-  ],
-  gemini: [
-    { label: "veo-3.1-generate-preview", value: "veo-3.1-generate-preview" },
-    { label: "veo-3.1-fast-generate-preview", value: "veo-3.1-fast-generate-preview" },
-    { label: "veo-3.0-generate-preview", value: "veo-3.0-generate-preview" },
-    { label: "veo-3.0-fast-generate-preview", value: "veo-3.0-fast-generate-preview" },
-    { label: "veo-2.0-generate-001", value: "veo-2.0-generate-001" },
-  ],
-  wan: [
-    { label: "wan2.6-i2v-flash", value: "wan2.6-i2v-flash" },
-    { label: "wan2.6-i2v", value: "wan2.6-i2v" },
-    { label: "wan2.5-i2v-preview", value: "wan2.5-i2v-preview" },
-    { label: "wan2.2-i2v-flash", value: "wan2.2-i2v-flash" },
-    { label: "wan2.2-i2v-plus", value: "wan2.2-i2v-plus" },
-    { label: "wanx2.1-i2v-plus", value: "wanx2.1-i2v-plus" },
-    { label: "wanx2.1-i2v-turbo", value: "wanx2.1-i2v-turbo" },
-    { label: "wanx2.1-kf2v-plus", value: "wanx2.1-kf2v-plus" },
-    { label: "wan2.2-kf2v-flash", value: "wan2.2-kf2v-flash" },
-    { label: "wan2.6-t2v", value: "wan2.6-t2v" },
-    { label: "wan2.5-t2v-preview", value: "wan2.5-t2v-preview" },
-    { label: "wan2.2-t2v-plus", value: "wan2.2-t2v-plus" },
-    { label: "wanx2.1-t2v-turbo", value: "wanx2.1-t2v-turbo" },
-    { label: "wanx2.1-t2v-plus", value: "wanx2.1-t2v-plus" },
-  ],
-  vidu: [
-    { label: "viduq3-pro", value: "viduq3-pro" },
-    { label: "viduq2-pro-fast", value: "viduq2-pro-fast" },
-    { label: "viduq2-pro", value: "viduq2-pro" },
-    { label: "viduq2-turbo", value: "viduq2-turbo" },
-    { label: "viduq1", value: "viduq1" },
-    { label: "viduq1-classic", value: "viduq1-classic" },
-    { label: "vidu2.0", value: "vidu2.0" },
-  ],
-};
+const videoModelPresets = ref<Record<string, { label: string; value: string }[]>>({
+  // volcengine: [
+  //   { label: "doubao-seedance-1-0-pro-fast-251015", value: "doubao-seedance-1-0-pro-fast-251015" },
+  //   { label: "doubao-seedance-1-5-pro-251215", value: "doubao-seedance-1-5-pro-251215" },
+  //   { label: "doubao-seedance-1-0-pro-250528", value: "doubao-seedance-1-0-pro-250528" },
+  //   { label: "doubao-seedance-1-0-lite-i2v-250428", value: "doubao-seedance-1-0-lite-i2v-250428" },
+  //   { label: "doubao-seedance-1-0-lite-t2v-250428", value: "doubao-seedance-1-0-lite-t2v-250428" },
+  // ],
+  // runninghub: [
+  //   { label: "sora-2", value: "sora-2" },
+  //   { label: "sora-2-pro", value: "sora-2-pro" },
+  // ],
+  // kling: [
+  //   { label: "kling-v1(STD)", value: "kling-v1(STD)" },
+  //   { label: "kling-v1(PRO)", value: "kling-v1(PRO)" },
+  //   { label: "kling-v1-6(PRO)", value: "kling-v1-6(PRO)" },
+  // ],
+  // gemini: [
+  //   { label: "veo-3.1-generate-preview", value: "veo-3.1-generate-preview" },
+  //   { label: "veo-3.1-fast-generate-preview", value: "veo-3.1-fast-generate-preview" },
+  //   { label: "veo-3.0-generate-preview", value: "veo-3.0-generate-preview" },
+  //   { label: "veo-3.0-fast-generate-preview", value: "veo-3.0-fast-generate-preview" },
+  //   { label: "veo-2.0-generate-001", value: "veo-2.0-generate-001" },
+  // ],
+  // wan: [
+  //   { label: "wan2.6-i2v-flash", value: "wan2.6-i2v-flash" },
+  //   { label: "wan2.6-i2v", value: "wan2.6-i2v" },
+  //   { label: "wan2.5-i2v-preview", value: "wan2.5-i2v-preview" },
+  //   { label: "wan2.2-i2v-flash", value: "wan2.2-i2v-flash" },
+  //   { label: "wan2.2-i2v-plus", value: "wan2.2-i2v-plus" },
+  //   { label: "wanx2.1-i2v-plus", value: "wanx2.1-i2v-plus" },
+  //   { label: "wanx2.1-i2v-turbo", value: "wanx2.1-i2v-turbo" },
+  //   { label: "wanx2.1-kf2v-plus", value: "wanx2.1-kf2v-plus" },
+  //   { label: "wan2.2-kf2v-flash", value: "wan2.2-kf2v-flash" },
+  //   { label: "wan2.6-t2v", value: "wan2.6-t2v" },
+  //   { label: "wan2.5-t2v-preview", value: "wan2.5-t2v-preview" },
+  //   { label: "wan2.2-t2v-plus", value: "wan2.2-t2v-plus" },
+  //   { label: "wanx2.1-t2v-turbo", value: "wanx2.1-t2v-turbo" },
+  //   { label: "wanx2.1-t2v-plus", value: "wanx2.1-t2v-plus" },
+  // ],
+  // vidu: [
+  //   { label: "viduq3-pro", value: "viduq3-pro" },
+  //   { label: "viduq2-pro-fast", value: "viduq2-pro-fast" },
+  //   { label: "viduq2-pro", value: "viduq2-pro" },
+  //   { label: "viduq2-turbo", value: "viduq2-turbo" },
+  //   { label: "viduq1", value: "viduq1" },
+  //   { label: "viduq1-classic", value: "viduq1-classic" },
+  //   { label: "vidu2.0", value: "vidu2.0" },
+  // ],
+});
 
 // 生成视频模型卡片列表
 const videoModels = computed<ModelCard[]>(() => {
   const models: ModelCard[] = [];
-  Object.entries(videoModelPresets).forEach(([manufacturer, presets]) => {
+  Object.entries(videoModelPresets.value).forEach(([manufacturer, presets]) => {
     presets.forEach((preset) => {
       models.push({
         manufacturer,
@@ -634,6 +637,21 @@ const emit = defineEmits(["fetchModelList"]);
 function sure() {
   emit("fetchModelList");
   modelShow.value = false;
+}
+function getData() {
+  axios
+    .post("/setting/getAiModelList", {
+      type: activeTab.value,
+    })
+    .then((res) => {
+      if (activeTab.value === "text") {
+        textModelPresets.value = res.data;
+      } else if (activeTab.value === "image") {
+        imageModelPresets.value = res.data;
+      } else if (activeTab.value === "video") {
+        videoModelPresets.value = res.data;
+      }
+    });
 }
 </script>
 

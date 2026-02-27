@@ -249,6 +249,7 @@ import {
   getDurationTip,
   getMaxImages,
   getAudioSupport,
+  getModelList,
 } from "@/components/videoConfig";
 
 const storeInstance = store();
@@ -278,7 +279,9 @@ interface Storyboard {
   duration: number;
 }
 const props = defineProps<{ scriptId: number }>();
-const storyboardShow = defineModel<boolean>({});
+const storyboardShow = defineModel<boolean>({
+  default: false,
+});
 const generateVideoLoading = ref(false);
 const allManufacturerDisable = ref(false);
 const videoConfigs = ref<VideoConfig[]>([]);
@@ -299,6 +302,7 @@ const availableManufacturers = computed(() => {
   return manufacturerList.value.map((i) => ({ label: i.model + manufacturerAllRecord[i.manufacturer], value: i.id, manufacturer: i.manufacturer }));
 });
 onMounted(async () => {
+  getModelList();
   const res = await axios.post("/video/getManufacturer", {
     userId: Number(localStorage.getItem("userId")),
   });
@@ -309,6 +313,7 @@ onMounted(async () => {
 watch(storyboardShow, (v) => {
   if (v) {
     videoConfigs.value = [];
+    getModelList();
   }
 });
 

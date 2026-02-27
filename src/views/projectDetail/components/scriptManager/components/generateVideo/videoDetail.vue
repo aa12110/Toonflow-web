@@ -117,7 +117,7 @@ import { message } from "ant-design-vue";
 import videoStore, { type VideoResult } from "@/stores/video";
 import { storeToRefs } from "pinia";
 import axios from "@/utils/axios";
-import { VideoConfigForm, type VideoConfigData } from "@/components/videoConfig";
+import { VideoConfigForm, type VideoConfigData, getModelList } from "@/components/videoConfig";
 
 const props = defineProps<{
   configId: number | null;
@@ -147,7 +147,11 @@ const results = computed(() => {
   if (!props.configId) return [];
   return store.getResultsByConfigId(props.configId);
 });
-
+watch(modalVisible, (v) => {
+  if (v) {
+    getModelList();
+  }
+});
 // 监听配置变化，初始化可编辑配置
 watch(
   config,
@@ -264,6 +268,9 @@ watch(videoPlayerVisible, (visible) => {
     videoRef.value.pause();
     currentPlayVideo.value = null;
   }
+});
+onMounted(() => {
+  getModelList();
 });
 </script>
 

@@ -168,9 +168,9 @@ async function saveStoryLine() {
       content: storyLine.value,
     });
     await getStoryLine();
-    message.success("保存成功");
+    window.$message.success("保存成功");
   } catch (e) {
-    message.error("保存失败");
+    window.$message.error("保存失败");
   }
 }
 // ==================== WebSocket相关 ====================
