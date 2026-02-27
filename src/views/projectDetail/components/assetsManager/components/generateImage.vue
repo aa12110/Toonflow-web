@@ -326,6 +326,9 @@ async function delImage(item: ImageState) {
           assetsId: assetsId.value,
         });
       }
+      if (props.data?.id) {
+        fetchImages(props.data.id);
+      }
       message.success("删除成功");
     },
   });
