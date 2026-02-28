@@ -225,13 +225,14 @@ const assetType = computed(() => TYPE_MAP[formData.value?.type ?? "道具"] ?? "
 
 // 文件选择
 const { open, onChange, onCancel } = useFileDialog({ multiple: false, reset: true, accept: ".png,.jpg,.jpeg" });
-
+const isFirstLoad = ref(true);
 // 监听弹窗打开
 watch(modalShow, (visible) => {
   if (visible && props.data) {
     formData.value = { ...props.data, sampleImage: "", uploadImage: "" };
+    isFirstLoad.value = true; // 重置首次加载标志
     fetchImages(props.data.id);
-    // 重置加载状态，确保每次打开弹窗时状态独立
+    // 重置加载状态,确保每次打开弹窗时状态独立
     promptLoading.value = false;
     generateLoading.value = false;
   }
@@ -264,10 +265,18 @@ async function fetchImages(id: number) {
   if (_id == formData.value?.id) {
     if (data.filePath.length > 0) {
       resultImages.value = [{ filePath: data.filePath, state: "生成成功" }, ...data.tempAssets];
-      selectedIndex.value = resultImages.value.findIndex((item) => item.filePath === formData.value?.filePath);
+      if (isFirstLoad.value) {
+        selectedIndex.value = resultImages.value.findIndex((item) => item.filePath === formData.value?.filePath);
+        isFirstLoad.value = false;
+      }
     } else {
       resultImages.value = [...data.tempAssets];
-      selectedIndex.value = resultImages.value.findIndex((item) => item.filePath === formData.value?.filePath && formData.value?.filePath.length > 0);
+      if (isFirstLoad.value) {
+        selectedIndex.value = resultImages.value.findIndex(
+          (item) => item.filePath === formData.value?.filePath && formData.value?.filePath.length > 0,
+        );
+        isFirstLoad.value = false;
+      }
     }
   }
 }
@@ -343,7 +352,6 @@ function close() {
 async function generatePrompt() {
   if (!formData.value) return;
   const { id, name, intro, type } = formData.value;
-
   promptLoading.value = true;
   try {
     const { data } = await axios.post("/assets/polishPrompt", {
@@ -351,7 +359,7 @@ async function generatePrompt() {
       assetsId: id,
       type: TYPE_MAP[type ?? "道具"] ?? "props",
       name,
-      describe: intro,
+      describe: intro ? intro : "无描述",
     });
     message.success("提示词生成成功");
     if (data.assetsId === formData.value.id) {

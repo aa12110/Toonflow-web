@@ -119,6 +119,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { message } from "ant-design-vue";
+import JSZip from "jszip";
 
 interface VideoData {
   id: number;
@@ -220,30 +221,73 @@ async function handleDownload() {
 
   const loadingKey = "download";
   message.loading({
-    content: `正在下载 ${selectedVideos.length} 个视频...`,
+    content: `正在打包 ${selectedVideos.length} 个视频...`,
     key: loadingKey,
     duration: 0,
   });
 
   try {
+    const zip = new JSZip();
+
+    // 下载所有视频并添加到压缩包
     for (let i = 0; i < selectedVideos.length; i++) {
       const video = selectedVideos[i];
-      // 获取视频在原始列表中的编号（从1开始）
       const videoIndex = videoData.value.findIndex((v) => v.id === video.id) + 1;
       const filename = `视频_${videoIndex}.mp4`;
 
-      await downloadFile(video.filePath, filename);
+      message.loading({
+        content: `正在处理 ${i + 1}/${selectedVideos.length}: ${filename}`,
+        key: loadingKey,
+        duration: 0,
+      });
 
-      if (i < selectedVideos.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      try {
+        const response = await fetch(video.filePath);
+        if (!response.ok) throw new Error(`无法获取视频: ${filename}`);
+
+        const blob = await response.blob();
+        zip.file(filename, blob);
+      } catch (error) {
+        console.error(`下载视频失败: ${filename}`, error);
+        // 继续处理其他视频
       }
     }
 
-    message.success({ content: "下载完成！", key: loadingKey });
+    // 生成压缩包
+    message.loading({
+      content: "正在生成压缩包...",
+      key: loadingKey,
+      duration: 0,
+    });
+
+    const zipBlob = await zip.generateAsync({
+      type: "blob",
+      compression: "DEFLATE",
+      compressionOptions: {
+        level: 6,
+      },
+    });
+
+    // 下载压缩包
+    const blobUrl = URL.createObjectURL(zipBlob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = `下载视频_${new Date().getTime()}.zip`;
+    link.style.display = "none";
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(link);
+    }, 100);
+
+    message.success({ content: "下载完成!", key: loadingKey });
     visible.value = false;
   } catch (error) {
-    console.error("下载错误:", error);
-    message.error({ content: "下载失败，请重试", key: loadingKey });
+    console.error("打包下载错误:", error);
+    message.error({ content: "打包失败,请重试", key: loadingKey });
   }
 }
 
