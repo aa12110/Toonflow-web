@@ -356,7 +356,6 @@ async function handleBatchGeneratePrompts() {
 const loadingBtn = ref(false);
 function handleOk() {
   loadingBtn.value = true;
-  console.log("%c Line:362 🍑 imageData.value", "background:#6ec1c2", imageData.value);
 
   axios
     .post("/storyboard/keepStoryboard", {

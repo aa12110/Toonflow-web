@@ -264,7 +264,7 @@ async function lensImage() {
     mockStoryboard.value.filePath = base64;
   };
   reader.readAsDataURL(file);
-  mockStoryboard.value.id = -1; // 新上传的图片没有id，使用-1标识，后端根据filePath处理这种情况
+  // mockStoryboard.value.id = -1; // 新上传的图片没有id，使用-1标识，后端根据filePath处理这种情况
 }
 
 async function handleSelectOtherImgs(): Promise<void> {
@@ -302,7 +302,11 @@ function delResult(index: number): void {
     resultSelectedIndex.value = mockStoryboard.value.generateImg.length - 1;
   }
 }
-
+function isBase64Image(str: string): boolean {
+  // 通用图片类型
+  const reg = /^data:image\/(jpeg|jpg|png|gif|bmp|webp|svg\+xml);base64,/i;
+  return reg.test(str);
+}
 async function doMerge(): Promise<void> {
   generateLoading.value = true;
 
@@ -312,7 +316,10 @@ async function doMerge(): Promise<void> {
     return;
   }
   const filePathMap: Record<string, number | string> = {
-    "@图1": mockStoryboard.value.id && mockStoryboard.value.id !== -1 ? mockStoryboard.value.id : mockStoryboard.value.filePath,
+    "@图1":
+      !isBase64Image(mockStoryboard.value.filePath) && mockStoryboard.value.id && mockStoryboard.value.id !== -1
+        ? mockStoryboard.value.id
+        : mockStoryboard.value.filePath,
   };
 
   mockStoryboard.value.otherImgs.forEach((item, idx) => {
@@ -349,6 +356,7 @@ function handleSaveFirstFrame(): void {
     message.warning("请先选择一张图片");
     return;
   }
+
   emit("save", {
     id: mockStoryboard.value.id,
     filePath: mockStoryboard.value.generateImg[resultSelectedIndex.value].filePath,
@@ -398,7 +406,7 @@ defineExpose({
   border: 1px solid #d9d9d9;
   cursor: pointer;
   background: #fafafa;
-
+  text-align: center;
   &:hover {
     border-color: #9913fa;
 

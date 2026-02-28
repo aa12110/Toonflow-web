@@ -8,6 +8,7 @@ import vidu from "@/assets/providers/vidu.png";
 import anthropic from "@/assets/providers/anthropic.png";
 import runninghub from "@/assets/providers/runninghub.png";
 import gemini from "@/assets/providers/gemini.png";
+import grsai from "@/assets/providers/grsai.png";
 
 export default {
   deepSeek: deepSeek,
@@ -21,4 +22,5 @@ export default {
   anthropic: anthropic,
   runninghub: runninghub,
   gemini: gemini,
+  grsai
 } as const;

@@ -114,7 +114,6 @@
                 </div>
                 <div class="formRow">
                   <label></label>
-                  {{ getMaxImages(config.manufacturer, config.model) }}
                   <span class="tip">拖拽调整顺序 | {{ config.images?.length || 0 }}/{{ getMaxImages(config.manufacturer, config.model) }}张</span>
                 </div>
               </template>
@@ -299,7 +298,7 @@ const manufacturerAllRecord: Record<string, string> = Object.values(manufacturer
 }, {});
 const availableManufacturers = computed(() => {
   if (manufacturerList.value.length === 0) return [];
-  return manufacturerList.value.map((i) => ({ label: i.model + manufacturerAllRecord[i.manufacturer], value: i.id, manufacturer: i.manufacturer }));
+  return manufacturerList.value.map((i) => ({ label: i.model + " " +manufacturerAllRecord[i.manufacturer], value: i.id, manufacturer: i.manufacturer }));
 });
 onMounted(async () => {
   getModelList();

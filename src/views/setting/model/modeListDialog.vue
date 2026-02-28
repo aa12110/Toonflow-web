@@ -144,6 +144,7 @@ const websites = ref<Record<string, string>>({
   anthropic: "",
   runninghub: "https://www.runninghub.cn/enterprise-api/consumerApi",
   gemini: "https://ai.google.dev/gemini-api/docs/api-key?hl=zh-cn",
+  grsai:"https://grsai.ai/zh/dashboard/api-keys"
 });
 
 const currentWebsite = computed(() => {
@@ -165,6 +166,7 @@ const manufacturerNames: Record<string, string> = {
   gemini: "Gemini",
   modelScope: "魔塔",
   xai: "XAI",
+  grsai: "Grsai",
   other: "其他",
 };
 
@@ -184,6 +186,7 @@ function getManufacturerColor(manufacturer: string): string {
     gemini: "lime",
     modelScope: "#634BFE",
     xai: "red",
+    grsai: "#2B7FFF",
     other: "default",
   };
   return colors[manufacturer] || "default";
@@ -253,6 +256,11 @@ const manufacturerDefaultBaseUrls: Record<string, Record<string, string>> = {
     text: "https://api-inference.modelscope.cn/v1",
     image: "https://api-inference.modelscope.cn/v1/images/generations|https://api-inference.modelscope.cn/v1/tasks/{id}",
     video: "",
+  },
+  grsai: {
+    text: "https://grsai.dakka.com.cn/v1",
+    image: "https://grsai.dakka.com.cn/v1/draw/nano-banana|https://grsai.dakka.com.cn/v1/draw/result",
+    video: "https://grsai.dakka.com.cn/v1/video/{model}|https://grsai.dakka.com.cn/v1/draw/result",
   },
   other: {
     text: "",
