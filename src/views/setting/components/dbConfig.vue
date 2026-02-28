@@ -57,7 +57,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import axios from "axios";
+import axios from "@/utils/axios";
 
 const firstConfirmVisible = ref(false);
 const secondConfirmVisible = ref(false);
