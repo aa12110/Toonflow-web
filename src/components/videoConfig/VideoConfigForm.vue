@@ -35,7 +35,7 @@
           <div class="frame-box" :class="{ 'has-image': localConfig.startFrame }" @click="openSelector('start')">
             <template v-if="localConfig.startFrame">
               <img :src="localConfig.startFrame.filePath" />
-              <a-button v-if="editable" class="remove-btn" type="text" size="small" @click.stop="localConfig.startFrame = null">
+              <a-button v-if="editable" class="remove-btn" type="text" size="small" @click.stop="removeStartFrame">
                 <close-outlined />
               </a-button>
               <span class="frame-label">首帧</span>
@@ -48,7 +48,7 @@
           <div class="frame-box" :class="{ 'has-image': localConfig.endFrame }" @click="openSelector('end')">
             <template v-if="localConfig.endFrame">
               <img :src="localConfig.endFrame.filePath" />
-              <a-button v-if="editable" class="remove-btn" type="text" size="small" @click.stop="localConfig.endFrame = null">
+              <a-button v-if="editable" class="remove-btn" type="text" size="small" @click.stop="removeEndFrame">
                 <close-outlined />
               </a-button>
               <span class="frame-label">尾帧</span>
@@ -82,7 +82,7 @@
                   <img class="image" :src="element.filePath" draggable="false" />
                   <div class="image-order">{{ imgIndex + 1 }}</div>
                 </div>
-                <a-button v-if="editable" class="remove-btn" type="text" size="small" @click="removeImage(imgIndex)">
+                <a-button v-if="editable" class="remove-btn" type="text" size="small" @click.stop="removeImage(imgIndex)">
                   <close-outlined />
                 </a-button>
               </div>
@@ -112,7 +112,7 @@
           <div class="frame-box single-frame" :class="{ 'has-image': localConfig.startFrame }" @click="openSelector('single')">
             <template v-if="localConfig.startFrame">
               <img :src="localConfig.startFrame.filePath" />
-              <a-button v-if="editable" class="remove-btn" type="text" size="small" @click.stop="localConfig.startFrame = null">
+              <a-button v-if="editable" class="remove-btn" type="text" size="small" @click.stop="removeStartFrame">
                 <close-outlined />
               </a-button>
             </template>
@@ -352,6 +352,18 @@ function onSelectorConfirm(images: ImageItem[]) {
 // 移除图片
 function removeImage(index: number) {
   localConfig.images.splice(index, 1);
+  emitChange();
+}
+
+// 移除首帧并通知外部
+function removeStartFrame() {
+  localConfig.startFrame = null;
+  emitChange();
+}
+
+// 移除尾帧并通知外部
+function removeEndFrame() {
+  localConfig.endFrame = null;
   emitChange();
 }
 

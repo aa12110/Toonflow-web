@@ -278,7 +278,6 @@ export default defineStore(
       } else {
         config.images.forEach((img) => videoImgs.push(img.filePath));
       }
-
       // 调用后端接口
       const { data } = await axios.post("/video/generateVideo", {
         projectId: config.projectId,
@@ -336,7 +335,10 @@ export default defineStore(
       configId: number,
       updates: Partial<Pick<VideoConfig, "prompt" | "resolution" | "duration" | "startFrame" | "endFrame" | "images" | "mode" | "audioEnabled">>,
     ) {
+      console.log("%c Line:338 🍐 updates", "background:#465975", updates);
+
       const config = videoConfigs.value.find((c) => c.id === configId);
+      console.log("%c Line:342 🌰 config", "background:#fca650", config);
       if (config) {
         if (updates.prompt !== undefined) config.prompt = updates.prompt;
         if (updates.resolution !== undefined) config.resolution = updates.resolution;
