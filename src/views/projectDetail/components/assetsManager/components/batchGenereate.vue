@@ -333,8 +333,8 @@ async function startGenerate(data: { id: number; prompt: string; name: string; t
     if (index !== -1) {
       localData.value[index].filePath = res.data.path;
     }
-  } catch {
-    message.error(`"${data.name}" 图片生成失败`);
+  } catch (e: any) {
+    message.error(`"${data.name}" 图片生成失败: ${e?.message ?? "未知错误"}`);
   } finally {
     rowImageLoading.value[data.id] = false;
   }

@@ -77,13 +77,12 @@ function handleOk() {
     .then(({ data }) => {
       message.success(`新增项目成功`);
       emit("getProjects");
+      addProjectShow.value = false;
     })
     .catch(() => {
       message.error(`新增项目失败`);
     })
-    .finally(() => {
-      addProjectShow.value = false;
-    });
+    .finally(() => {});
 }
 </script>
 

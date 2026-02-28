@@ -13,7 +13,7 @@
           <i-file-text :size="24" class="summaryIcon mr-3" />
           <span class="summaryTitle">原文管理</span>
         </div>
-        <t-button theme="default" variant="outline" @click="purgeNovelShow = true">
+        <t-button theme="primary" variant="outline" @click="purgeNovelShow = true">
           <template #icon><i-optimize :size="16" /></template>
           新增
         </t-button>

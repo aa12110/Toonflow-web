@@ -1,5 +1,5 @@
 <template>
-  <el-dialog v-model="showConfigModal" :title="configModalTitle" :footer="null" width="520px">
+  <el-dialog v-model="showConfigModal" :title="configModalTitle" :close-on-click-modal="false" :footer="null" width="520px">
     <a-form :model="modelForm">
       <a-form-item label="模型名称">
         <a-input v-model:value="modelForm.model" placeholder="请输入模型标识" />
