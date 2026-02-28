@@ -10,13 +10,13 @@
     </t-card>
 
     <t-card class="linkCard">
-      <div class="linkItem" @click="openLink('https://github.com/your-repo')">
+      <div class="linkItem" @click="openLink('https://github.com/HBAI-Ltd/Toonflow-app')">
         <i-github theme="outline" size="20" />
         <span>GitHub 仓库</span>
         <i-right theme="outline" size="16" class="arrow" />
       </div>
       <t-divider />
-      <div class="linkItem" @click="openLink('https://gitee.com/your-repo')">
+      <div class="linkItem" @click="openLink('https://gitee.com/HBAI-Ltd/Toonflow-app')">
         <i-code theme="outline" size="20" />
         <span>Gitee 仓库</span>
         <i-right theme="outline" size="16" class="arrow" />
@@ -24,13 +24,13 @@
     </t-card>
 
     <t-card class="linkCard">
-      <div class="linkItem" @click="openLink('https://github.com/your-repo/releases')">
+      <div class="linkItem" @click="openLink('https://github.com/HBAI-Ltd/Toonflow-app/releases')">
         <i-refresh theme="outline" size="20" />
         <span>检查更新 (GitHub)</span>
         <i-right theme="outline" size="16" class="arrow" />
       </div>
       <t-divider />
-      <div class="linkItem" @click="openLink('https://gitee.com/your-repo/releases')">
+      <div class="linkItem" @click="openLink('https://gitee.com/HBAI-Ltd/Toonflow-app/releases')">
         <i-refresh theme="outline" size="20" />
         <span>检查更新 (Gitee)</span>
         <i-right theme="outline" size="16" class="arrow" />
