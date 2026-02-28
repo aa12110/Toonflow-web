@@ -248,7 +248,7 @@ function startPreview(imageUrl: string): void {
 const { open, onChange, onCancel } = useFileDialog({ multiple: false, reset: true, accept: ".png,.jpg,.jpeg" });
 // 文件选择
 async function lensImage() {
-   const files = await new Promise<FileList | null>((resolve) => {
+  const files = await new Promise<FileList | null>((resolve) => {
     open();
     onChange((f) => resolve(f));
     onCancel(() => resolve(null));
@@ -257,8 +257,14 @@ async function lensImage() {
   if (!files?.length) return;
 
   const file = files[0];
-  const url = URL.createObjectURL(file);
-  mockStoryboard.value.filePath = url;
+  //转成base64显示
+  const reader = new FileReader();
+  reader.onload = () => {
+    const base64 = reader.result as string;
+    mockStoryboard.value.filePath = base64;
+  };
+  reader.readAsDataURL(file);
+  mockStoryboard.value.id = -1; // 新上传的图片没有id，使用-1标识，后端根据filePath处理这种情况
 }
 
 async function handleSelectOtherImgs(): Promise<void> {
@@ -305,7 +311,6 @@ async function doMerge(): Promise<void> {
     generateLoading.value = false;
     return;
   }
-
   const filePathMap: Record<string, number | string> = {
     "@图1": mockStoryboard.value.id && mockStoryboard.value.id !== -1 ? mockStoryboard.value.id : mockStoryboard.value.filePath,
   };
@@ -313,7 +318,6 @@ async function doMerge(): Promise<void> {
   mockStoryboard.value.otherImgs.forEach((item, idx) => {
     filePathMap[`@图${idx + 2}`] = item.id;
   });
-
   try {
     const res = await axios.post("/storyboard/generateStoryboardApi", {
       filePath: filePathMap,
