@@ -27,10 +27,7 @@
             <div class="formItem">
               <div class="label">直接粘贴小说原文内容</div>
               <div class="uploadWrap">
-                <t-textarea
-                  v-model="content"
-                  placeholder="请输入小说原文内容"
-                  :autosize="{ minRows: 12, maxRows: 12 }" />
+                <t-textarea v-model="content" placeholder="请输入小说原文内容" :autosize="{ minRows: 12, maxRows: 12 }" />
               </div>
               <div class="footerInfo f ac jb" style="margin-top: 8px">
                 <div>
@@ -71,7 +68,7 @@
             <div class="selected-info">已勾选：{{ selectedTextLength }}字(小于200000字)</div>
 
             <div style="margin-top: 16px; text-align: right">
-              <t-button variant="outline" style="margin-top: 16px" @click="activeKey = 'To1'">上一步</t-button>
+              <t-button variant="outline" @click="activeKey = 'To1'">上一步</t-button>
               <t-button theme="primary" style="margin-left: 10px" :disabled="selectedTextLength > 200000" @click="handleSubmit">保存</t-button>
             </div>
           </t-tab-panel>

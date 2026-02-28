@@ -9,15 +9,9 @@
         <span class="summary-title">剧本统计</span>
         <span v-if="scripts?.length" class="count-badge">{{ scripts.length }} 集</span>
       </div>
-      <button @click="handleGenerate" :disabled="generating" class="generate-btn">
-        <template v-if="generating">
-          <span class="btn-spinner"></span>
-          <span>生成中...</span>
-        </template>
-        <template v-else>
-          <i-optimize :size="18" />
-          <span>生成剧本</span>
-        </template>
+      <button @click="exportScript" class="generate-btn">
+        <i-export theme="outline" size="18" />
+        <span>一键导出剧本</span>
       </button>
     </div>
 
@@ -75,9 +69,23 @@
                     <i-text :size="18" />
                     <span>剧本内容</span>
                   </div>
-                  <div v-if="item.content && !scriptGenerateLoading[item.id]" class="word-count">
-                    <i-file-text :size="14" />
-                    <span>{{ item.content.length }} 字</span>
+                  <div class="f ac">
+                    <div class="exportScript">
+                      <a-button v-if="item.element?.length" @click="handleGenerate" :disabled="generating" size="small" class="batch-btn">
+                        <template v-if="generating">
+                          <span class="btn-spinner"></span>
+                          <span>生成中...</span>
+                        </template>
+                        <template v-else>
+                          <i-optimize :size="18" />
+                          <span>生成剧本</span>
+                        </template>
+                      </a-button>
+                    </div>
+                    <div v-if="item.content && !scriptGenerateLoading[item.id]" class="word-count">
+                      <i-file-text :size="14" />
+                      <span>{{ item.content.length }} 字</span>
+                    </div>
                   </div>
                 </div>
 
@@ -369,6 +377,29 @@ watch(selectSet, async () => {
     adjustTextareaHeight(textarea);
   }
 });
+//导出剧本
+function exportScript() {
+  const script = scripts.value?.map((item) => {
+    return {
+      name: item.name,
+      content: item.content,
+    };
+  });
+  if (!script || !script.length) {
+    message.warning("暂无剧本可导出");
+    return;
+  }
+  //生成txt文件
+  const blob = new Blob([script.map((s) => `${s.name}\n\n${s.content}\n\n`).join("")], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `剧本_${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 </script>
 
 <style lang="scss" scoped>
@@ -537,6 +568,7 @@ $line-height: 28px;
         }
 
         .word-count {
+          margin-left: 10px;
           display: flex;
           align-items: center;
           gap: 4px;

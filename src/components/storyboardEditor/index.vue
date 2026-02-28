@@ -146,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFileDialog } from "@vueuse/core";
 import { ref, computed, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { message } from "ant-design-vue";
@@ -244,16 +245,20 @@ function startPreview(imageUrl: string): void {
   setPreviewVisible(true);
 }
 // 文件选择
+const { open, onChange, onCancel } = useFileDialog({ multiple: false, reset: true, accept: ".png,.jpg,.jpeg" });
+// 文件选择
 async function lensImage() {
-  selectElementModal.value = true;
-  try {
-    const res = await new Promise<{ id: number; filePath: string }>((resolve) => {
-      componentResolve.value = resolve;
-    });
-    mockStoryboard.value.filePath = res.filePath;
-  } catch {
-    // 用户取消
-  }
+   const files = await new Promise<FileList | null>((resolve) => {
+    open();
+    onChange((f) => resolve(f));
+    onCancel(() => resolve(null));
+  });
+
+  if (!files?.length) return;
+
+  const file = files[0];
+  const url = URL.createObjectURL(file);
+  mockStoryboard.value.filePath = url;
 }
 
 async function handleSelectOtherImgs(): Promise<void> {
