@@ -20,8 +20,10 @@ class WsClient {
 
   constructor(url: string, options: WsOptions = {}) {
     const { wsBaseUrl } = storeToRefs(settingStore());
+    const effectiveWsBase =
+      wsBaseUrl.value || `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
 
-    const fullUrl = new URL(url, wsBaseUrl.value);
+    const fullUrl = new URL(url, effectiveWsBase);
     const token = localStorage.getItem("token");
     if (token) fullUrl.searchParams.set("token", token);
     this.url = fullUrl.toString();

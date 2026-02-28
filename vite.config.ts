@@ -42,6 +42,14 @@ export default defineConfig({
     }),
     viteSingleFile(),
   ],
+  server: {
+    proxy: {
+      "^/(assets|index|novel|other|outline|project|prompt|script|setting|storyboard|task|user|video)(/|$)": {
+        target: "http://localhost:60000",
+        ws: true,
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

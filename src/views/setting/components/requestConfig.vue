@@ -2,14 +2,14 @@
   <div class="request-config">
     <t-form :data="formData" labelAlign="top" :rules="formRules" @submit="handleSubmit">
       <t-form-item label="API 地址" name="baseUrl">
-        <t-input v-model="formData.baseUrl" placeholder="请输入 API 请求地址" clearable>
+        <t-input v-model="formData.baseUrl" placeholder="留空则使用同源模式（当前站点）" clearable>
           <template #prefix-icon>
             <t-icon name="link" />
           </template>
         </t-input>
       </t-form-item>
       <t-form-item label="WebSocket地址" name="wsBaseUrl">
-        <t-input v-model="formData.wsBaseUrl" placeholder="请输入 WebSocket 地址" clearable>
+        <t-input v-model="formData.wsBaseUrl" placeholder="留空则自动推导为同源 WS 地址" clearable>
           <template #prefix-icon>
             <t-icon name="swap" />
           </template>
@@ -44,19 +44,17 @@ const formData = ref<RequestForm>({
 
 const formRules: FormRules<RequestForm> = {
   baseUrl: [
-    { required: true, message: "请输入 API 地址", trigger: "blur" },
-    { 
-      pattern: /^https?:\/\/.+/, 
-      message: "请输入有效的 HTTP/HTTPS 地址", 
-      trigger: "blur" 
+    {
+      validator: (value: string) => !value || /^https?:\/\/.+/.test(value),
+      message: "请输入有效的 HTTP/HTTPS 地址，或留空使用同源模式",
+      trigger: "blur",
     },
   ],
   wsBaseUrl: [
-    { required: true, message: "请输入 WebSocket 地址", trigger: "blur" },
-    { 
-      pattern: /^wss?:\/\/.+/, 
-      message: "请输入有效的 WS/WSS 地址", 
-      trigger: "blur" 
+    {
+      validator: (value: string) => !value || /^wss?:\/\/.+/.test(value),
+      message: "请输入有效的 WS/WSS 地址，或留空自动推导",
+      trigger: "blur",
     },
   ],
 };
@@ -75,11 +73,11 @@ function handleSubmit({ validateResult }: { validateResult: boolean }) {
 }
 
 function handleReset() {
-  formData.value.baseUrl = "http://localhost:60000";
-  formData.value.wsBaseUrl = "ws://localhost:60000";
+  formData.value.baseUrl = "";
+  formData.value.wsBaseUrl = "";
   settingStore.baseUrl = formData.value.baseUrl;
   settingStore.wsBaseUrl = formData.value.wsBaseUrl;
-  MessagePlugin.success("已重置为默认地址");
+  MessagePlugin.success("已重置为同源模式");
 }
 
 onMounted(() => {

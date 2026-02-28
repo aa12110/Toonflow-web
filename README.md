@@ -166,15 +166,12 @@ yarn dev
 ```
 
 开发服务器默认运行在 `http://localhost:5173`，支持热模块替换（HMR）。
+默认已配置 API 代理到 `http://localhost:60000`（覆盖 `/assets`、`/index`、`/novel` 等后端路由前缀），可直接使用同源相对路径请求。
 
 ### 4. 构建生产版本
 
 ```bash
-# 开发环境构建
-yarn build:dev
-
-# 生产环境构建
-yarn build:prod
+yarn build
 ```
 
 构建产物将输出到 `dist` 目录。
@@ -194,7 +191,7 @@ yarn preview
 1. **构建项目**
 
 ```bash
-yarn build:prod
+yarn build
 ```
 
 2. **部署到 Web 服务器**
@@ -214,18 +211,15 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
-    # API 代理（可选）
-    location /api/ {
-        proxy_pass http://localhost:60000/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+    # 单页应用路由回退
+    error_page 404 /index.html;
 }
 ```
 
 ### 方式二：与后端集成部署
 
 将构建后的 `dist` 目录内容复制到后端的静态资源目录 `scripts/web` 中。
+后端 `Toonflow-app` 在 Web 模式下会由 Express 同时提供前端和 API，统一入口为 `http://localhost:60000`（Docker 对外默认 `80` 端口）。
 
 > 💡 **提示**：后端服务可从 [GitHub](https://github.com/HBAI-Ltd/Toonflow-app) 或 [Gitee](https://gitee.com/HBAI-Ltd/Toonflow-app) 仓库获取。
 
@@ -256,11 +250,8 @@ yarn lint
 # 代码格式化
 yarn format
 
-# 构建开发版本
-yarn build:dev
-
 # 构建生产版本
-yarn build:prod
+yarn build
 
 # 预览生产构建
 yarn preview
