@@ -352,7 +352,6 @@ function close() {
 async function generatePrompt() {
   if (!formData.value) return;
   const { id, name, intro, type } = formData.value;
-
   promptLoading.value = true;
   try {
     const { data } = await axios.post("/assets/polishPrompt", {
@@ -360,7 +359,7 @@ async function generatePrompt() {
       assetsId: id,
       type: TYPE_MAP[type ?? "道具"] ?? "props",
       name,
-      describe: intro,
+      describe: intro ? intro : "无描述",
     });
     message.success("提示词生成成功");
     if (data.assetsId === formData.value.id) {
